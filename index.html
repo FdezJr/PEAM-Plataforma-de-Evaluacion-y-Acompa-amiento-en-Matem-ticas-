@@ -351,12 +351,18 @@
         else { finishFlex(); }
     }
 
-    async function finishFlex() {
+async function finishFlex() {
         state.flex.elapsed = Date.now() - state.flex.startTime;
         
         // Cálculo de promedios de latencia (RT) y Costo de Cambio (Switch Cost)
-        const avgRtR1 = state.flex.timesR1.length ? Math.round(state.flex.timesR1.reduce((a,b)=>a+b, 0) / state.flex.timesR1.length) : 0;
-        const avgRtR2 = state.flex.times2 ? Math.round(state.flex.timesR2.reduce((a,b)=>a+b, 0) / state.flex.timesR2.length) : (state.flex.timesR2.length ? Math.round(state.flex.timesR2.reduce((a,b)=>a+b, 0) / state.flex.timesR2.length) : 0);
+        const avgRtR1 = state.flex.timesR1.length 
+            ? Math.round(state.flex.timesR1.reduce((a, b) => a + b, 0) / state.flex.timesR1.length) 
+            : 0;
+            
+        const avgRtR2 = state.flex.timesR2.length 
+            ? Math.round(state.flex.timesR2.reduce((a, b) => a + b, 0) / state.flex.timesR2.length) 
+            : 0;
+            
         const switchCost = avgRtR2 - avgRtR1;
 
         const res = { 
@@ -376,7 +382,14 @@
             tiempoMs: state.flex.elapsed, 
             fecha: new Date().toISOString() 
         };
-        try { await db.collection("resultados").add(res); showScreen('screenFinal'); } catch (e) { console.error(e); }
+        try { 
+            await db.collection("resultados").add(res); 
+            showScreen('screenFinal'); 
+        } catch (e) { 
+            console.error(e); 
+            showToast("Error al guardar los datos.");
+        }
+    }
     }
     // ADMIN
     function verifyAdminPassword() { if (document.getElementById('adminPasswordInput').value === ADMIN_PASSWORD) { document.getElementById('adminLogin').style.display = 'none'; document.getElementById('adminDashboard').style.display = 'block'; loadAdminData(); } else { document.getElementById('errorPassword').classList.add('visible'); setTimeout(() => document.getElementById('errorPassword').classList.remove('visible'), 2000); } }
