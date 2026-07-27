@@ -254,7 +254,7 @@
     };
     let allAdminData = []; let profileChartInstance = null;
 
-    PERSISTENCIA Y RECUPERACIÓN DE PROGRESO
+    // PERSISTENCIA Y RECUPERACIÓN DE PROGRESO
     // ==========================================
     function saveProgress() {
         if (!state.user || !state.user.nombre) return;
@@ -347,7 +347,33 @@
     function formatDate(iso) { const d = new Date(iso); return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }); }
     function showToast(message) { const existing = document.querySelector('.toast'); if(existing) existing.remove(); const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
 
-    document.getElementById('registerForm').addEventListener('submit', function(e) { e.preventDefault(); let valid = true; const name = document.getElementById('inputName').value.trim(); const age = parseInt(document.getElementById('inputAge').value); const course = document.getElementById('inputCourse').value.trim(); const t = (c, i, i2) => { if(c) { document.getElementById(i).classList.add('visible'); document.getElementById(i2).classList.add('input-error'); valid=false; } else { document.getElementById(i).classList.remove('visible'); document.getElementById(i2).classList.remove('input-error'); } }; t(!name, 'errorName', 'inputName'); t(!age || age < 3 || age > 99, 'errorAge', 'inputAge'); t(!course, 'errorCourse', 'inputCourse'); if (!valid) return; state.user = { nombre: name, edad: age, curso: course }; showScreen('screenInstrIs12'); });
+    document.getElementById('registerForm').addEventListener('submit', function(e) { 
+    e.preventDefault(); 
+    let valid = true; 
+    const name = document.getElementById('inputName').value.trim(); 
+    const age = parseInt(document.getElementById('inputAge').value); 
+    const course = document.getElementById('inputCourse').value.trim(); 
+
+    const t = (c, i, i2) => { 
+        if(c) { 
+            document.getElementById(i).classList.add('visible'); 
+            document.getElementById(i2).classList.add('input-error'); 
+            valid=false; 
+        } else { 
+            document.getElementById(i).classList.remove('visible'); 
+            document.getElementById(i2).classList.remove('input-error'); 
+        } 
+    }; 
+
+    t(!name, 'errorName', 'inputName'); 
+    t(!age || age < 3 || age > 99, 'errorAge', 'inputAge'); 
+    t(!course, 'errorCourse', 'inputCourse'); 
+
+    if (!valid) return; 
+
+    state.user = { nombre: name, edad: age, curso: course }; 
+    showScreen('screenInstrIs12'); 
+});
 
 // RETO ATENCIÓN SOSTENIDA I: ¿ES 12?
     function generateIs12Trials() {
