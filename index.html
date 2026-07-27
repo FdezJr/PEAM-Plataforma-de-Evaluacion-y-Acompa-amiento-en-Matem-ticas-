@@ -211,7 +211,59 @@
     // RETO 1
     function startMemory1Display() { state.mem1.numbers = []; let a = 0; while (state.mem1.numbers.length < 5 && a < 500) { const n = Math.floor(Math.random() * 18) + 2; if (!state.mem1.numbers.some(e => Math.abs(e - n) < 3)) state.mem1.numbers.push(n); a++; } state.mem1.correctOrder = [...state.mem1.numbers].sort((a, b) => a - b); state.mem1.userOrder = []; const c = document.getElementById('flashcardNumbers1'); c.innerHTML = ''; state.mem1.numbers.forEach(n => { const s = document.createElement('span'); s.className = 'flashcard-num'; s.textContent = n; c.appendChild(s); }); showScreen('screenDisplayMemory1'); const sT = Date.now(); const p = document.getElementById('countdownProgress1'); const tE = document.getElementById('countdownText1'); p.style.strokeDashoffset = '0'; p.style.stroke = 'var(--primary)'; tE.textContent = '10'; tE.style.fill = 'var(--text)'; clearInterval(state.mem1.interval); state.mem1.interval = setInterval(() => { const e = (Date.now() - sT) / 1000; const r = Math.max(0, 10 - e); p.style.strokeDashoffset = CIRC * (1 - r / 10); if (r <= 2) { p.style.stroke = 'var(--error)'; tE.style.fill = 'var(--error)'; } else if (r <= 4) { p.style.stroke = 'var(--accent)'; tE.style.fill = 'var(--accent)'; } tE.textContent = Math.ceil(r); if (r <= 0) { clearInterval(state.mem1.interval); startMemory1Sorting(); } }, 50); }
     function startMemory1Sorting() { showScreen('screenSortingMemory1'); const c = document.getElementById('inputCellsContainer1'); c.innerHTML = ''; document.getElementById('btnVerifyMemory1').disabled = false; for (let i = 0; i < 5; i++) { const inp = document.createElement('input'); inp.type = 'text'; inp.className = 'input-cell'; inp.id = `cell-${i}`; inp.maxLength = 2; inp.placeholder = i + 1; inp.setAttribute('inputmode', 'numeric'); inp.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); if (e.target.value.length >= 2) { const n = document.getElementById(`cell-${i + 1}`); if (n) n.focus(); else e.target.blur(); } }); c.appendChild(inp); } setTimeout(() => document.getElementById('cell-0').focus(), 100); state.mem1.startTime = Date.now(); }
-    async function verifyMemory1() { const uO = []; for (let i = 0; i < 5; i++) { const inp = document.getElementById(`cell-${i}`); const v = inp.value.trim(); if (v === '') { showToast('Completa todas las celdas.'); inp.focus(); return; } uO.push(parseInt(v)); } document.getElementById('btnVerifyMemory1').disabled = true; state.mem1.userOrder = uO; state.mem1.elapsed = Date.now() - state.mem1.startTime; let aC = true; const m = []; for (let i = 0; i < 5; i++) { if (state.mem1.userOrder[i] !== state.mem1.correctOrder[i]) { aC = false; m.push({ posicion: i + 1, elegido: state.mem1.userOrder[i], correcto: state.mem1.correctOrder[i] }); } } const res = { categoria: "Funciones Ejecutivas", subcategoria: "Memoria de Trabajo - Ordenar", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, esCorrecto: aC, errores: m, tiempoMs: state.mem1.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrMemory2'); } catch (e) { console.error(e); showToast("Error al guardar."); document.getElementById('btnVerifyMemory1').disabled = false; } }
+   async function verifyMemory1() {
+    const uO = [];
+    for (let i = 0; i < 5; i++) {
+        const inp = document.getElementById(`cell-${i}`);
+        const v = inp.value.trim();
+        if (v === '') {
+            showToast('Completa todas las celdas.');
+            inp.focus();
+            return;
+        }
+        uO.push(parseInt(v));
+    }
+    document.getElementById('btnVerifyMemory1').disabled = true;
+    state.mem1.userOrder = uO;
+    state.mem1.elapsed = Date.now() - state.mem1.startTime;
+    
+    let aciertos = 0;
+    const m = [];
+    for (let i = 0; i < 5; i++) {
+        if (state.mem1.userOrder[i] === state.mem1.correctOrder[i]) {
+            aciertos++;
+        } else {
+            m.push({ posicion: i + 1, elegido: state.mem1.userOrder[i], correcto: state.mem1.correctOrder[i] });
+        }
+    }
+    const aC = aciertos === 5;
+
+    const res = {
+        categoria: "Funciones Ejecutivas",
+        subcategoria: "Memoria de Trabajo - Ordenar",
+        nombre: state.user.nombre,
+        edad: state.user.edad,
+        curso: state.user.curso,
+        esCorrecto: aC,
+        metricas: {
+            aciertos: aciertos,
+            errores: 5 - aciertos,
+            total: 5
+        },
+        errores: m,
+        tiempoMs: state.mem1.elapsed,
+        fecha: new Date().toISOString()
+    };
+
+    try {
+        await db.collection("resultados").add(res);
+        showScreen('screenInstrMemory2');
+    } catch (e) {
+        console.error(e);
+        showToast("Error al guardar.");
+        document.getElementById('btnVerifyMemory1').disabled = false;
+    }
+}
 
     // RETO 2
     function startMemory2() { state.mem2.trials = []; state.mem2.results = []; state.mem2.currentTrial = 0; for (let i = 0; i < 5; i++) { const n = Math.floor(Math.random() * 900) + 100; const a = Math.floor(Math.random() * 15) + 2; const b = Math.floor(Math.random() * 10) + 2; const op = Math.random() > 0.5 ? '+' : '-'; let mathText, mathResult; if (op === '+') { mathText = `${a} + ${b}`; mathResult = a + b; } else { const max = Math.max(a, b), min = Math.min(a, b); mathText = `${max} - ${min}`; mathResult = max - min; } state.mem2.trials.push({ targetNum: n, mathText: mathText, mathResult: mathResult }); } showScreen('screenPlayMemory2'); startMem2Trial(); }
@@ -320,12 +372,26 @@
         
         let memScore = 0, attScore = 0, inhScore = 0, flexScore = 0;
 
+// Cálculo seguro de Memoria 1 (Soporta registros nuevos y heredados)
         const m1 = userData.find(r => r.subcategoria === "Memoria de Trabajo - Ordenar");
         const m2 = userData.find(r => r.subcategoria === "Memoria de Trabajo - Distractor");
-        let m1Score = m1 ? ((5 - m1.errores.length) / 5) * 100 : null;
-        let m2Score = m2 ? (m2.metricas.correctRecalls / 5) * 100 : null;
+        
+        let m1Score = null;
+        if (m1) {
+            if (m1.metricas && typeof m1.metricas.aciertos === 'number') {
+                m1Score = (m1.metricas.aciertos / 5) * 100;
+            } else if (Array.isArray(m1.errores)) {
+                m1Score = Math.max(0, ((5 - m1.errores.length) / 5) * 100);
+            } else {
+                m1Score = m1.esCorrecto ? 100 : 0;
+            }
+        }
+
+        let m2Score = (m2 && m2.metricas) ? (m2.metricas.correctRecalls / 5) * 100 : null;
+        
         if (m1Score !== null && m2Score !== null) memScore = (m1Score + m2Score) / 2;
-        else if (m1Score !== null) memScore = m1Score; else if (m2Score !== null) memScore = m2Score;
+        else if (m1Score !== null) memScore = m1Score;
+        else if (m2Score !== null) memScore = m2Score;
 
         const att = userData.find(r => r.subcategoria === "Atención Sostenida");
         if (att) { let hitScore = (att.metricas.aciertos / att.metricas.totalObjetivo) * 50; let totalDistractors = 64 - att.metricas.totalObjetivo; let correctIgnores = Math.max(0, totalDistractors - att.metricas.falsasAlarmas); let ignoreScore = totalDistractors > 0 ? (correctIgnores / totalDistractors) * 50 : 50; attScore = hitScore + ignoreScore; }
