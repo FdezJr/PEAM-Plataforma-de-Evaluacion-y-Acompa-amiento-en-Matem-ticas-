@@ -158,41 +158,9 @@
             </div>
         </section>
         
-<!-- RETO 1: MEMORIA 1 -->
-        <section class="screen" id="screenInstrMemory1">
-            <div class="glass-card text-center">
-                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style="background: var(--primary-glow);">
-                    <i class="fa-solid fa-brain text-xl" style="color: var(--primary);"></i>
-                </div>
-                <h2 class="text-2xl font-bold mb-2">Reto 1: Ordena de Mayor a Menor</h2>
-                <p class="text-sm mb-6" style="color: var(--text-muted);">Memoria de trabajo (5 intentos)</p>
-                <div class="text-left space-y-3 mb-8" style="color: var(--text-muted);">
-                    <p>1. Verás <strong style="color: var(--text);">5 números</strong> durante <strong style="color: var(--accent);">4 segundos</strong>.</p>
-                    <p>2. Memorízalos y ordénalos de <strong style="color: var(--text);">MAYOR a MENOR</strong> haciendo clic en las casillas.</p>
-                    <p>3. Completarás un total de <strong style="color: var(--primary);">5 intentos</strong>.</p>
-                </div>
-                <button class="btn-primary" onclick="startMemory1()"><i class="fa-solid fa-play"></i> Comenzar</button>
-            </div>
-        </section>
-
-        <section class="screen" id="screenPlayMemory1">
-            <div class="glass-card text-center" style="max-width: 500px;">
-                <div class="flex justify-between items-center mb-6">
-                    <span class="badge badge-purple font-mono" id="mem1RoundDisplay">Intento 1 de 5</span>
-                    <span class="badge badge-warning font-mono">Memoria 1</span>
-                </div>
-                
-                <h3 class="text-lg font-bold mb-4" id="mem1Instruction">Memoriza los números:</h3>
-                
-                <div class="grid grid-cols-5 gap-2 my-6" id="mem1Grid">
-                    <!-- Los números o botones se generan dinámicamente desde JS -->
-                </div>
-
-                <button class="btn-primary w-full py-3" id="btnMem1Confirm" onclick="confirmMemory1()" style="display: none;">
-                    <i class="fa-solid fa-check"></i> Confirmar Orden
-                </button>
-            </div>
-        </section>
+        <!-- RETO 1: MEMORIA 1 -->
+        <section class="screen" id="screenInstrMemory1"><div class="glass-card text-center"><div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style="background: var(--primary-glow);"><i class="fa-solid fa-brain text-xl" style="color: var(--primary);"></i></div><h2 class="text-2xl font-bold mb-2">Reto 1: Ordena los Numeros</h2><p class="text-sm mb-6" style="color: var(--text-muted);">Memoria de trabajo</p><div class="text-left space-y-3 mb-8" style="color: var(--text-muted);"><p>1. Se mostrarán <strong style="color: var(--text);">5 números</strong> durante <strong style="color: var(--accent);">10 segundos</strong>.</p><p>2. Memorízalos y escríbelos en orden de <strong style="color: var(--text);">menor a mayor</strong>.</p></div><button class="btn-primary" onclick="startMemory1Display()"><i class="fa-solid fa-eye"></i> Ver numeros</button></div></section>
+        <section class="screen" id="screenDisplayMemory1"><div class="text-center w-full max-w-xl"><p class="text-sm font-semibold mb-4 uppercase tracking-widest" style="color: var(--accent);">Memoriza estos numeros</p><div class="flashcard mb-6" id="flashcard1"><div class="flashcard-numbers" id="flashcardNumbers1"></div></div><div class="flex justify-center mb-4"><svg class="countdown-ring" viewBox="0 0 100 100"><circle class="countdown-bg" cx="50" cy="50" r="42"/><circle class="countdown-progress" id="countdownProgress1" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="0" transform="rotate(-90 50 50)"/><text class="countdown-text" id="countdownText1" x="50" y="50" text-anchor="middle" dominant-baseline="central">10</text></svg></div></div></section>
         <section class="screen" id="screenSortingMemory1"><div class="glass-card text-center" style="max-width: 580px;"><h2 class="text-xl font-bold mb-6">Escribe de menor a mayor</h2><div class="flex gap-3 justify-center flex-wrap mb-8" id="inputCellsContainer1"></div><button class="btn-primary w-full" id="btnVerifyMemory1" onclick="verifyMemory1()"><i class="fa-solid fa-check"></i> Verificar y seguir</button></div></section>
 
         <!-- RETO 2: MEMORIA 2 -->
@@ -277,16 +245,8 @@
 
    let state = {
         user: { nombre: '', edad: '', curso: '' },
-        is12: { trials: [], current: 0, timer: null, itemStartTime: 0, userResponded: false, responses: [] },
-        mem1: { 
-            round: 0, 
-            maxRounds: 5, 
-            numbers: [], 
-            correctOrder: [], 
-            userOrder: [], 
-            startTime: 0, 
-            roundResults: [] 
-        },
+        is12: { trials: [], current: 0, timer: null, itemStartTime: 0, userResponded: false, responses: [] }, // <-- AGREGADO
+        mem1: { numbers: [], correctOrder: [], userOrder: [], startTime: 0, elapsed: 0, interval: null },
         mem2: { trials: [], currentTrial: 0, results: [], startTime: 0, interval: null },
         att: { targetNum: 0, totalTarget: 10, gridNumbers: [], foundCount: 0, wrongClicks: 0, startTime: 0, elapsed: 0 },
         inh: { operations: [], startTime: 0, elapsed: 0 },
@@ -430,131 +390,103 @@
         }
     }
     
-    // RETO 1: MEMORIA DE TRABAJO (MAYOR A MENOR - 5 INTENTOS)
-    function startMemory1() {
-        state.mem1.round = 0;
-        state.mem1.maxRounds = 5;
-        state.mem1.roundResults = [];
-        showScreen('screenPlayMemory1');
-        nextMemory1Round();
-    }
+    // RETO 1
+    function startMemory1Display() { state.mem1.numbers = []; let a = 0; while (state.mem1.numbers.length < 5 && a < 500) { const n = Math.floor(Math.random() * 18) + 2; if (!state.mem1.numbers.some(e => Math.abs(e - n) < 3)) state.mem1.numbers.push(n); a++; } state.mem1.correctOrder = [...state.mem1.numbers].sort((a, b) => a - b); state.mem1.userOrder = []; const c = document.getElementById('flashcardNumbers1'); c.innerHTML = ''; state.mem1.numbers.forEach(n => { const s = document.createElement('span'); s.className = 'flashcard-num'; s.textContent = n; c.appendChild(s); }); showScreen('screenDisplayMemory1'); const sT = Date.now(); const p = document.getElementById('countdownProgress1'); const tE = document.getElementById('countdownText1'); p.style.strokeDashoffset = '0'; p.style.stroke = 'var(--primary)'; tE.textContent = '10'; tE.style.fill = 'var(--text)'; clearInterval(state.mem1.interval); state.mem1.interval = setInterval(() => { const e = (Date.now() - sT) / 1000; const r = Math.max(0, 10 - e); p.style.strokeDashoffset = CIRC * (1 - r / 10); if (r <= 2) { p.style.stroke = 'var(--error)'; tE.style.fill = 'var(--error)'; } else if (r <= 4) { p.style.stroke = 'var(--accent)'; tE.style.fill = 'var(--accent)'; } tE.textContent = Math.ceil(r); if (r <= 0) { clearInterval(state.mem1.interval); startMemory1Sorting(); } }, 50); }
+    function startMemory1Sorting() { 
+    showScreen('screenSortingMemory1'); 
+    const c = document.getElementById('inputCellsContainer1'); 
+    c.innerHTML = ''; 
+    document.getElementById('btnVerifyMemory1').disabled = false; 
+    
+    for (let i = 0; i < 5; i++) { 
+        const inp = document.createElement('input'); 
+        inp.type = 'text'; 
+        inp.className = 'input-cell'; 
+        inp.id = `cell-${i}`; 
+        inp.maxLength = 2; 
+        inp.placeholder = i + 1; 
+        inp.setAttribute('inputmode', 'numeric'); 
+        inp.setAttribute('pattern', '[0-9]*');
 
-    function nextMemory1Round() {
-        if (state.mem1.round >= state.mem1.maxRounds) {
-            finishMemory1Test();
-            return;
-        }
+        // Manejo de entrada de texto
+        inp.addEventListener('input', (e) => { 
+            e.target.value = e.target.value.replace(/[^0-9]/g, ''); 
+            if (e.target.value.length >= 2) { 
+                const n = document.getElementById(`cell-${i + 1}`); 
+                if (n) n.focus(); 
+                else e.target.blur(); 
+            } 
+        }); 
 
-        state.mem1.round++;
-        document.getElementById('mem1RoundDisplay').innerText = `Intento ${state.mem1.round} de 5`;
-        document.getElementById('mem1Instruction').innerText = "Memoriza los números:";
-        document.getElementById('btnMem1Confirm').style.display = 'none';
-
-        // Generar 5 números aleatorios únicos de 2 dígitos
-        let nums = [];
-        while (nums.length < 5) {
-            let n = Math.floor(Math.random() * 89) + 10;
-            if (!nums.includes(n)) nums.push(n);
-        }
-
-        state.mem1.numbers = [...nums];
-        // Secuencia requerida: MAYOR a MENOR (b - a)
-        state.mem1.correctOrder = [...nums].sort((a, b) => b - a);
-        state.mem1.userOrder = [];
-
-        // Mostrar números en pantalla
-        const grid = document.getElementById('mem1Grid');
-        grid.innerHTML = nums.map(n => `
-            <div class="p-4 rounded-xl font-mono text-xl font-bold text-center" 
-                 style="background: var(--bg-card-alt); border: 1px solid var(--border); color: var(--primary);">
-                ${n}
-            </div>
-        `).join('');
-
-        // Ocultar tras 4 segundos
-        setTimeout(() => {
-            hideAndShuffleMemory1();
-        }, 4000);
-    }
-
-    function hideAndShuffleMemory1() {
-        document.getElementById('mem1Instruction').innerText = "Ordénalos de MAYOR a MENOR haciendo clic:";
-        
-        let shuffled = [...state.mem1.numbers].sort(() => Math.random() - 0.5);
-        state.mem1.startTime = Date.now();
-
-        const grid = document.getElementById('mem1Grid');
-        grid.innerHTML = shuffled.map(n => `
-            <button class="p-4 rounded-xl font-mono text-xl font-bold text-center transition-all" 
-                    onclick="selectMem1Number(this, ${n})"
-                    style="background: var(--bg-card-alt); border: 1px solid var(--border); color: var(--text);">
-                ${n}
-            </button>
-        `).join('');
-    }
-
-    function selectMem1Number(btn, num) {
-        if (state.mem1.userOrder.includes(num)) return;
-
-        state.mem1.userOrder.push(num);
-        btn.style.background = 'var(--primary)';
-        btn.style.color = '#fff';
-        btn.innerText = `${num} (#${state.mem1.userOrder.length})`;
-
-        if (state.mem1.userOrder.length === 5) {
-            document.getElementById('btnMem1Confirm').style.display = 'block';
-        }
-    }
-
-    function confirmMemory1() {
-        const elapsed = Math.round((Date.now() - state.mem1.startTime) / 1000);
-        
-        let correctCount = 0;
-        for (let i = 0; i < 5; i++) {
-            if (state.mem1.userOrder[i] === state.mem1.correctOrder[i]) {
-                correctCount++;
+        // Manejo de retroceso con Backspace
+        inp.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && e.target.value === '' && i > 0) {
+                const prev = document.getElementById(`cell-${i - 1}`);
+                if (prev) {
+                    prev.focus();
+                    prev.setSelectionRange(prev.value.length, prev.value.length);
+                }
             }
-        }
-
-        state.mem1.roundResults.push({
-            intento: state.mem1.round,
-            aciertosPosicionales: correctCount,
-            esPerfecto: correctCount === 5,
-            tiempoSegundos: elapsed
         });
 
-        nextMemory1Round();
-    }
+        c.appendChild(inp); 
+    } 
+    setTimeout(() => document.getElementById('cell-0').focus(), 100); 
+    state.mem1.startTime = Date.now(); 
+}
+  async function verifyMemory1() { 
+    const uO = []; 
+    for (let i = 0; i < 5; i++) { 
+        const inp = document.getElementById(`cell-${i}`); 
+        const v = inp.value.trim(); 
+        if (v === '') { 
+            showToast('Completa todas las celdas.'); 
+            inp.focus(); 
+            return; 
+        } 
+        uO.push(parseInt(v)); 
+    } 
 
-    async function finishMemory1Test() {
-        const results = state.mem1.roundResults;
-        const totalAciertos = results.reduce((acc, r) => acc + r.aciertosPosicionales, 0);
-        const intentosPerfectos = results.filter(r => r.esPerfecto).length;
-        const tiempoMedio = Math.round(results.reduce((acc, r) => acc + r.tiempoSegundos, 0) / 5);
+    const btn = document.getElementById('btnVerifyMemory1');
+    btn.disabled = true; 
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
 
-        const res = {
-            categoria: "Funciones Ejecutivas",
-            subcategoria: "Memoria de Trabajo - Orden Descendente (Mayor a Menor, 5 Intentos)",
-            nombre: state.user.nombre,
-            edad: state.user.edad,
-            curso: state.user.curso,
-            metricas: {
-                totalAciertosPosicionales: totalAciertos,
-                intentosPerfectos: intentosPerfectos,
-                tiempoMedioRespuesta: tiempoMedio,
-                detalleIntentos: results
-            },
-            fecha: new Date().toISOString()
-        };
+    state.mem1.userOrder = uO; 
+    state.mem1.elapsed = Date.now() - state.mem1.startTime; 
+    let aC = true; 
+    const m = []; 
+    for (let i = 0; i < 5; i++) { 
+        if (state.mem1.userOrder[i] !== state.mem1.correctOrder[i]) { 
+            aC = false; 
+            m.push({ posicion: i + 1, elegido: state.mem1.userOrder[i], correcto: state.mem1.correctOrder[i] }); 
+        } 
+    } 
 
-        try {
-            await db.collection("resultados").add(res);
-            showScreen('screenInstrMemory2');
-        } catch (e) {
-            console.error(e);
-            showToast("Error al guardar los resultados.");
-        }
-    }
+    const res = { 
+        categoria: "Funciones Ejecutivas", 
+        subcategoria: "Memoria de Trabajo - Ordenar", 
+        nombre: state.user.nombre, 
+        edad: state.user.edad, 
+        curso: state.user.curso, 
+        esCorrecto: aC, 
+        errores: m, 
+        tiempoMs: state.mem1.elapsed, 
+        fecha: new Date().toISOString() 
+    }; 
+
+    try { 
+        await db.collection("resultados").add(res); 
+        btn.innerHTML = originalText;
+        showScreen('screenInstrMemory2'); 
+    } catch (e) { 
+        console.error(e); 
+        showToast("Error al guardar."); 
+        btn.disabled = false; 
+        btn.innerHTML = originalText;
+    } 
+}
+
     // RETO 2
     function startMemory2() { state.mem2.trials = []; state.mem2.results = []; state.mem2.currentTrial = 0; for (let i = 0; i < 5; i++) { const n = Math.floor(Math.random() * 900) + 100; const a = Math.floor(Math.random() * 15) + 2; const b = Math.floor(Math.random() * 10) + 2; const op = Math.random() > 0.5 ? '+' : '-'; let mathText, mathResult; if (op === '+') { mathText = `${a} + ${b}`; mathResult = a + b; } else { const max = Math.max(a, b), min = Math.min(a, b); mathText = `${max} - ${min}`; mathResult = max - min; } state.mem2.trials.push({ targetNum: n, mathText: mathText, mathResult: mathResult }); } showScreen('screenPlayMemory2'); startMem2Trial(); }
     function startMem2Trial() { const t = state.mem2.trials[state.mem2.currentTrial]; document.getElementById('mem2Round').innerText = `${state.mem2.currentTrial + 1} / 5`; document.getElementById('mem2NumberDisplay').innerText = t.targetNum; document.getElementById('mem2Phase1').style.display = 'block'; document.getElementById('mem2Phase2').style.display = 'none'; document.getElementById('mem2Phase3').style.display = 'none'; const sT = Date.now(); const p = document.getElementById('countdownProgress2'); const tE = document.getElementById('countdownText2'); p.style.strokeDashoffset = '0'; p.style.stroke = 'var(--primary)'; tE.textContent = '5'; tE.style.fill = 'var(--text)'; clearInterval(state.mem2.interval); state.mem2.interval = setInterval(() => { const e = (Date.now() - sT) / 1000; const r = Math.max(0, 5 - e); p.style.strokeDashoffset = CIRC * (1 - r / 5); if (r <= 2) { p.style.stroke = 'var(--error)'; tE.style.fill = 'var(--error)'; } tE.textContent = Math.ceil(r); if (r <= 0) { clearInterval(state.mem2.interval); showMem2Math(); } }, 50); }
