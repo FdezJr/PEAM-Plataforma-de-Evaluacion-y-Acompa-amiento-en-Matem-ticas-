@@ -123,7 +123,41 @@
                 </form>
             </div>
         </section>
+<!-- RETO: ES 12 (ATENCIÓN SOSTENIDA I) -->
+        <section class="screen" id="screenInstrIs12">
+            <div class="glass-card text-center">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style="background: rgba(20, 184, 166, 0.25);">
+                    <i class="fa-solid fa-clock-rotate-left text-xl" style="color: var(--primary);"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">Reto 1: ¿Es 12?</h2>
+                <p class="text-sm mb-6" style="color: var(--text-muted);">Atención Sostenida y Tiempo de Reacción</p>
+                <div class="text-left space-y-3 mb-8 text-sm" style="color: var(--text-muted);">
+                    <p>1. Aparecerán <strong>20 operaciones</strong>, una por una.</p>
+                    <p>2. Presiona el botón <strong style="color: var(--primary);">"ES 12"</strong> ÚNICAMENTE si el resultado da 12.</p>
+                    <p>3. Si el resultado no es 12, <strong>no presiones nada</strong> y espera a la siguiente.</p>
+                    <p>4. Tienes máximo <strong>4 segundos</strong> por operación.</p>
+                </div>
+                <button class="btn-primary" onclick="startIs12Test()"><i class="fa-solid fa-play"></i> Comenzar</button>
+            </div>
+        </section>
 
+        <section class="screen" id="screenPlayIs12">
+            <div class="glass-card text-center" style="max-width: 450px;">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="badge badge-purple font-mono" id="is12Progress">1 / 20</span>
+                    <span class="badge badge-warning font-mono" id="is12Timer">4.0s</span>
+                </div>
+                
+                <div class="text-5xl font-bold font-mono my-8 py-6 rounded-2xl" style="background: var(--bg-card-alt); border: 1px solid var(--border); color: var(--text);" id="is12OpDisplay">
+                    7 + 5
+                </div>
+
+                <button class="btn-primary w-full py-4 text-xl" id="btnIs12Action" onclick="handleIs12Response()">
+                    <i class="fa-solid fa-check-circle"></i> ES 12
+                </button>
+            </div>
+        </section>
+        
         <!-- RETO 1: MEMORIA 1 -->
         <section class="screen" id="screenInstrMemory1"><div class="glass-card text-center"><div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style="background: var(--primary-glow);"><i class="fa-solid fa-brain text-xl" style="color: var(--primary);"></i></div><h2 class="text-2xl font-bold mb-2">Reto 1: Ordena los Numeros</h2><p class="text-sm mb-6" style="color: var(--text-muted);">Memoria de trabajo</p><div class="text-left space-y-3 mb-8" style="color: var(--text-muted);"><p>1. Se mostrarán <strong style="color: var(--text);">5 números</strong> durante <strong style="color: var(--accent);">10 segundos</strong>.</p><p>2. Memorízalos y escríbelos en orden de <strong style="color: var(--text);">menor a mayor</strong>.</p></div><button class="btn-primary" onclick="startMemory1Display()"><i class="fa-solid fa-eye"></i> Ver numeros</button></div></section>
         <section class="screen" id="screenDisplayMemory1"><div class="text-center w-full max-w-xl"><p class="text-sm font-semibold mb-4 uppercase tracking-widest" style="color: var(--accent);">Memoriza estos numeros</p><div class="flashcard mb-6" id="flashcard1"><div class="flashcard-numbers" id="flashcardNumbers1"></div></div><div class="flex justify-center mb-4"><svg class="countdown-ring" viewBox="0 0 100 100"><circle class="countdown-bg" cx="50" cy="50" r="42"/><circle class="countdown-progress" id="countdownProgress1" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="0" transform="rotate(-90 50 50)"/><text class="countdown-text" id="countdownText1" x="50" y="50" text-anchor="middle" dominant-baseline="central">10</text></svg></div></div></section>
@@ -174,8 +208,28 @@
                 <button class="tab-btn" onclick="switchTab('tabInh', this)">Inhibición</button>
                 <button class="tab-btn" onclick="switchTab('tabFlex', this)">Flexibilidad</button>
                 <button class="tab-btn" onclick="switchTab('tabChart', this)">Perfil</button>
+                <button class="tab-btn" onclick="switchTab('tabIs12', this)">Atención ("¿Es 12?")</button>
             </div>
             <div id="tabMem"><h3 class="text-lg font-bold mb-4" style="color: var(--primary);">Reto 1: Ordenar</h3><div class="table-wrap mb-8"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Resultado</th><th>Errores</th></tr></thead><tbody id="tableMemory1"></tbody></table></div><h3 class="text-lg font-bold mb-4" style="color: var(--primary);">Reto 2: Distractor</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Recuerdo</th><th>Cálculo</th></tr></thead><tbody id="tableMemory2"></tbody></table></div></div>
+            <div id="tabIs12" style="display: none;">
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Nombre</th>
+                                <th>Curso</th>
+                                <th>Aciertos</th>
+                                <th>Omisiones</th>
+                                <th>Falsas Alarmas</th>
+                                <th>TR Medio</th>
+                                <th>Variabilidad (SD)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableIs12"></tbody>
+                    </table>
+                </div>
+            </div>
             <div id="tabAtt" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos</th><th>Falsas Alarmas</th><th>Omisiones</th><th>Tiempo</th></tr></thead><tbody id="tableAttention"></tbody></table></div></div>
             <div id="tabInh" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos</th><th>Falsas Alarmas</th><th>Omisiones</th><th>Tiempo</th></tr></thead><tbody id="tableInhibition"></tbody></table></div></div>
             <div id="tabFlex" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos R1</th><th>Aciertos R2</th><th>Total</th></tr></thead><tbody id="tableFlex"></tbody></table></div></div>
@@ -189,8 +243,9 @@
     const db = firebase.firestore();
     const ADMIN_PASSWORD = 'admin2024'; const CIRC = 2 * Math.PI * 42;
 
-    let state = {
+   let state = {
         user: { nombre: '', edad: '', curso: '' },
+        is12: { trials: [], current: 0, timer: null, itemStartTime: 0, userResponded: false, responses: [] }, // <-- AGREGADO
         mem1: { numbers: [], correctOrder: [], userOrder: [], startTime: 0, elapsed: 0, interval: null },
         mem2: { trials: [], currentTrial: 0, results: [], startTime: 0, interval: null },
         att: { targetNum: 0, totalTarget: 10, gridNumbers: [], foundCount: 0, wrongClicks: 0, startTime: 0, elapsed: 0 },
@@ -206,8 +261,135 @@
     function formatDate(iso) { const d = new Date(iso); return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }); }
     function showToast(message) { const existing = document.querySelector('.toast'); if(existing) existing.remove(); const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
 
-    document.getElementById('registerForm').addEventListener('submit', function(e) { e.preventDefault(); let valid = true; const name = document.getElementById('inputName').value.trim(); const age = parseInt(document.getElementById('inputAge').value); const course = document.getElementById('inputCourse').value.trim(); const t = (c, i, i2) => { if(c) { document.getElementById(i).classList.add('visible'); document.getElementById(i2).classList.add('input-error'); valid=false; } else { document.getElementById(i).classList.remove('visible'); document.getElementById(i2).classList.remove('input-error'); } }; t(!name, 'errorName', 'inputName'); t(!age || age < 3 || age > 99, 'errorAge', 'inputAge'); t(!course, 'errorCourse', 'inputCourse'); if (!valid) return; state.user = { nombre: name, edad: age, curso: course }; showScreen('screenInstrAttention'); });
+    document.getElementById('registerForm').addEventListener('submit', function(e) { e.preventDefault(); let valid = true; const name = document.getElementById('inputName').value.trim(); const age = parseInt(document.getElementById('inputAge').value); const course = document.getElementById('inputCourse').value.trim(); const t = (c, i, i2) => { if(c) { document.getElementById(i).classList.add('visible'); document.getElementById(i2).classList.add('input-error'); valid=false; } else { document.getElementById(i).classList.remove('visible'); document.getElementById(i2).classList.remove('input-error'); } }; t(!name, 'errorName', 'inputName'); t(!age || age < 3 || age > 99, 'errorAge', 'inputAge'); t(!course, 'errorCourse', 'inputCourse'); if (!valid) return; state.user = { nombre: name, edad: age, curso: course }; showScreen('screenInstrIs12'); });
 
+// RETO ATENCIÓN SOSTENIDA I: ¿ES 12?
+    function generateIs12Trials() {
+        let targets = [];
+        let distractors = [];
+        const targetPool = ["6 + 6", "15 - 3", "4 x 3", "24 / 2", "7 + 5", "20 - 8", "2 x 6", "36 / 3", "8 + 4", "14 - 2"];
+        while (targets.length < 8) {
+            let op = targetPool[Math.floor(Math.random() * targetPool.length)];
+            targets.push({ text: op, is12: true });
+        }
+        const distractorPool = ["5 + 5", "10 + 4", "18 - 5", "3 x 3", "16 / 2", "9 + 2", "15 - 5", "5 x 2", "20 / 4", "8 + 3"];
+        while (distractors.length < 12) {
+            let op = distractorPool[Math.floor(Math.random() * distractorPool.length)];
+            distractors.push({ text: op, is12: false });
+        }
+        return [...targets, ...distractors].sort(() => Math.random() - 0.5);
+    }
+
+    function startIs12Test() {
+        state.is12.trials = generateIs12Trials();
+        state.is12.current = 0;
+        state.is12.responses = [];
+        showScreen('screenPlayIs12');
+        nextIs12Trial();
+    }
+
+    function nextIs12Trial() {
+        clearTimeout(state.is12.timer);
+        if (state.is12.current >= 20) {
+            finishIs12Test();
+            return;
+        }
+        const trial = state.is12.trials[state.is12.current];
+        state.is12.userResponded = false;
+        document.getElementById('is12Progress').innerText = `${state.is12.current + 1} / 20`;
+        document.getElementById('is12OpDisplay').innerText = trial.text;
+        document.getElementById('btnIs12Action').disabled = false;
+        state.is12.itemStartTime = Date.now();
+
+        state.is12.timer = setTimeout(() => {
+            if (!state.is12.userResponded) {
+                if (trial.is12) {
+                    state.is12.responses.push({ isTarget: true, type: 'omission', rt: null });
+                } else {
+                    state.is12.responses.push({ isTarget: false, type: 'correct_rejection', rt: null });
+                }
+                state.is12.current++;
+                nextIs12Trial();
+            }
+        }, 4000);
+    }
+
+    function handleIs12Response() {
+        if (state.is12.userResponded) return;
+        state.is12.userResponded = true;
+        clearTimeout(state.is12.timer);
+        const rt = Date.now() - state.is12.itemStartTime;
+        const trial = state.is12.trials[state.is12.current];
+        document.getElementById('btnIs12Action').disabled = true;
+
+        if (trial.is12) {
+            state.is12.responses.push({ isTarget: true, type: 'hit', rt: rt });
+        } else {
+            state.is12.responses.push({ isTarget: false, type: 'false_alarm', rt: rt });
+        }
+        state.is12.current++;
+        nextIs12Trial();
+    }
+
+    async function finishIs12Test() {
+        const resps = state.is12.responses;
+        const aciertos = resps.filter(r => r.type === 'hit').length;
+        const omisiones = resps.filter(r => r.type === 'omission').length;
+        const falsasAlarmas = resps.filter(r => r.type === 'false_alarm').length;
+        const correctRTs = resps.filter(r => r.type === 'hit').map(r => r.rt);
+        const meanRT = correctRTs.length ? Math.round(correctRTs.reduce((a, b) => a + b, 0) / correctRTs.length) : 0;
+        
+        let sdRT = 0;
+        if (correctRTs.length > 1) {
+            const variance = correctRTs.reduce((acc, rt) => acc + Math.pow(rt - meanRT, 2), 0) / correctRTs.length;
+            sdRT = Math.round(Math.sqrt(variance));
+        }
+
+        const bloques = [];
+        for (let b = 0; b < 4; b++) {
+            const blockResponses = resps.slice(b * 5, (b + 1) * 5);
+            const bHits = blockResponses.filter(r => r.type === 'hit').length;
+            const bOm = blockResponses.filter(r => r.type === 'omission').length;
+            const bFA = blockResponses.filter(r => r.type === 'false_alarm').length;
+            const bTargets = blockResponses.filter(r => r.isTarget).length;
+            const bRTs = blockResponses.filter(r => r.type === 'hit').map(r => r.rt);
+            const bMeanRT = bRTs.length ? Math.round(bRTs.reduce((a, b) => a + b, 0) / bRTs.length) : 0;
+
+            bloques.push({
+                bloque: b + 1,
+                porcentajeAciertos: bTargets > 0 ? Math.round((bHits / bTargets) * 100) : 100,
+                aciertos: bHits,
+                omisiones: bOm,
+                falsasAlarmas: bFA,
+                tiempoMedioRT: bMeanRT
+            });
+        }
+
+        const res = {
+            categoria: "Funciones Ejecutivas",
+            subcategoria: "Atención Sostenida - Es 12",
+            nombre: state.user.nombre,
+            edad: state.user.edad,
+            curso: state.user.curso,
+            metricas: {
+                aciertos: aciertos,
+                omisiones: omisiones,
+                falsasAlarmas: falsasAlarmas,
+                tiempoMedioRT: meanRT,
+                variabilidadRT: sdRT,
+                bloques: bloques
+            },
+            fecha: new Date().toISOString()
+        };
+
+        try {
+            await db.collection("resultados").add(res);
+            showScreen('screenInstrAttention'); // Redirige a la segunda prueba de atención (Búsqueda Visual)
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    
     // RETO 1
     function startMemory1Display() { state.mem1.numbers = []; let a = 0; while (state.mem1.numbers.length < 5 && a < 500) { const n = Math.floor(Math.random() * 18) + 2; if (!state.mem1.numbers.some(e => Math.abs(e - n) < 3)) state.mem1.numbers.push(n); a++; } state.mem1.correctOrder = [...state.mem1.numbers].sort((a, b) => a - b); state.mem1.userOrder = []; const c = document.getElementById('flashcardNumbers1'); c.innerHTML = ''; state.mem1.numbers.forEach(n => { const s = document.createElement('span'); s.className = 'flashcard-num'; s.textContent = n; c.appendChild(s); }); showScreen('screenDisplayMemory1'); const sT = Date.now(); const p = document.getElementById('countdownProgress1'); const tE = document.getElementById('countdownText1'); p.style.strokeDashoffset = '0'; p.style.stroke = 'var(--primary)'; tE.textContent = '10'; tE.style.fill = 'var(--text)'; clearInterval(state.mem1.interval); state.mem1.interval = setInterval(() => { const e = (Date.now() - sT) / 1000; const r = Math.max(0, 10 - e); p.style.strokeDashoffset = CIRC * (1 - r / 10); if (r <= 2) { p.style.stroke = 'var(--error)'; tE.style.fill = 'var(--error)'; } else if (r <= 4) { p.style.stroke = 'var(--accent)'; tE.style.fill = 'var(--accent)'; } tE.textContent = Math.ceil(r); if (r <= 0) { clearInterval(state.mem1.interval); startMemory1Sorting(); } }, 50); }
     function startMemory1Sorting() { 
