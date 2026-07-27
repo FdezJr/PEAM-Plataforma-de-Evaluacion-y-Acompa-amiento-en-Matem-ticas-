@@ -355,64 +355,112 @@
 }
     async function verifyInhibition() { state.inh.elapsed = Date.now() - state.inh.startTime; let a = 0, o = 0, f = 0, rC = 0; state.inh.operations.forEach((op, i) => { const inp = document.getElementById(`op-input-${i}`); const v = inp.value.trim() !== '' ? parseInt(inp.value.trim()) : null; if (op.esMayor20) { if (v === op.result) { a++; } else { o++; } } else { if (v === null) { rC++; } else { f++; } } }); const res = { categoria: "Funciones Ejecutivas", subcategoria: "Control Inhibitorio", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { aciertos: a, omisiones: o, falsasAlarmas: f, rechazosCorrectos: rC }, tiempoMs: state.inh.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrFlex'); } catch (e) { console.error(e); } }
 
-    // RETO 5: FLEXIBILIDAD COGNITIVA
-    function startFlexibility() {
-        state.flex = { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: Date.now(), elapsed: 0 };
-        for (let i = 0; i < 8; i++) {
-            let a = Math.floor(Math.random() * 9) + 2; let b = Math.floor(Math.random() * 9) + 2;
-            let op = Math.random() > 0.5 ? '+' : '-';
-            let res, text;
-            if (op === '+') { res = a + b; text = `${a} + ${b}`; }
-            else { let max = Math.max(a,b), min = Math.min(a,b); res = max - min; text = `${max} - ${min}`; }
-            state.flex.trials.push({ text: text, result: res, isEven: res % 2 === 0, phase: i < 4 ? 1 : 2 });
-        }
-        showScreen('screenPlayFlex');
-        renderFlexTrial();
+function startFlexibility() {
+    state.flex = { 
+        trials: [], 
+        current: 0, 
+        scoreR1: 0, 
+        scoreR2: 0, 
+        timesR1: [], 
+        timesR2: [], 
+        startTime: Date.now(), 
+        itemStartTime: 0, 
+        elapsed: 0 
+    };
+    for (let i = 0; i < 8; i++) {
+        let a = Math.floor(Math.random() * 9) + 2; 
+        let b = Math.floor(Math.random() * 9) + 2;
+        let op = Math.random() > 0.5 ? '+' : '-';
+        let res, text;
+        if (op === '+') { res = a + b; text = `${a} + ${b}`; }
+        else { let max = Math.max(a,b), min = Math.min(a,b); res = max - min; text = `${max} - ${min}`; }
+        state.flex.trials.push({ text: text, result: res, isEven: res % 2 === 0, phase: i < 4 ? 1 : 2 });
     }
+    showScreen('screenPlayFlex');
+    renderFlexTrial();
+}
 
-    function renderFlexTrial() {
-        let t = state.flex.trials[state.flex.current];
-        document.getElementById('flexOpText').innerText = t.text + " = ?";
-        const badge = document.getElementById('flexRoundBadge');
-        const ruleBox = document.getElementById('flexRuleBox');
-        const ruleText = document.getElementById('flexRuleText');
+function renderFlexTrial() {
+    let t = state.flex.trials[state.flex.current];
+    document.getElementById('flexOpText').innerText = t.text + " = ?";
+    const badge = document.getElementById('flexRoundBadge');
+    const ruleBox = document.getElementById('flexRuleBox');
+    const ruleText = document.getElementById('flexRuleText');
 
-        if (t.phase === 1) {
-            badge.innerText = `Ronda 1 - ${state.flex.current + 1} / 4`;
-            badge.style.background = 'var(--pink-glow)'; badge.style.color = 'var(--pink)';
-            ruleText.innerText = "P = Par | I = Impar"; ruleText.style.color = "var(--pink)";
-            ruleBox.style.borderColor = "var(--pink)";
-        } else {
-            badge.innerText = `Ronda 2 - ${state.flex.current - 3} / 4`;
-            badge.style.background = 'rgba(239,68,68,0.15)'; badge.style.color = 'var(--error)';
-            ruleText.innerText = "¡CAMBIO! I = Par | P = Impar"; ruleText.style.color = "var(--error)";
-            ruleBox.style.borderColor = "var(--error)";
-            ruleBox.classList.add('rule-shift');
-            setTimeout(() => ruleBox.classList.remove('rule-shift'), 400);
-        }
+    if (t.phase === 1) {
+        badge.innerText = `Ronda 1 - ${state.flex.current + 1} / 4`;
+        badge.style.background = 'var(--pink-glow)'; 
+        badge.style.color = 'var(--pink)';
+        ruleText.innerText = "P = Par | I = Impar"; 
+        ruleText.style.color = "var(--pink)";
+        ruleBox.style.borderColor = "var(--pink)";
+    } else {
+        badge.innerText = `Ronda 2 - ${state.flex.current - 3} / 4`;
+        badge.style.background = 'rgba(239,68,68,0.15)'; 
+        badge.style.color = 'var(--error)';
+        ruleText.innerText = "¡CAMBIO! I = Par | P = Impar"; 
+        ruleText.style.color = "var(--error)";
+        ruleBox.style.borderColor = "var(--error)";
+        ruleBox.classList.add('rule-shift');
+        setTimeout(() => ruleBox.classList.remove('rule-shift'), 400);
     }
+    
+    // Registrar el tiempo exacto en que se muestra el ítem
+    state.flex.itemStartTime = Date.now();
+}
 
-    function submitFlex(ans) {
-        let t = state.flex.trials[state.flex.current];
-        let correctPar = t.isEven ? 'P' : 'I';
-        let correctAns = t.phase === 1 ? correctPar : (correctPar === 'P' ? 'I' : 'P');
-        
-        if (ans === correctAns) {
-            if (t.phase === 1) state.flex.scoreR1++; else state.flex.scoreR2++;
-            // Visual feedback could be added here
-        }
-        
-        state.flex.current++;
-        if (state.flex.current < 8) { renderFlexTrial(); } 
-        else { finishFlex(); }
+function submitFlex(ans) {
+    const responseTime = Date.now() - state.flex.itemStartTime;
+    let t = state.flex.trials[state.flex.current];
+    let correctPar = t.isEven ? 'P' : 'I';
+    let correctAns = t.phase === 1 ? correctPar : (correctPar === 'P' ? 'I' : 'P');
+    
+    if (t.phase === 1) {
+        state.flex.timesR1.push(responseTime);
+        if (ans === correctAns) state.flex.scoreR1++;
+    } else {
+        state.flex.timesR2.push(responseTime);
+        if (ans === correctAns) state.flex.scoreR2++;
     }
-
-    async function finishFlex() {
-        state.flex.elapsed = Date.now() - state.flex.startTime;
-        const res = { categoria: "Funciones Ejecutivas", subcategoria: "Flexibilidad Cognitiva", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { aciertosR1: state.flex.scoreR1, aciertosR2: state.flex.scoreR2, totalAciertos: state.flex.scoreR1 + state.flex.scoreR2 }, tiempoMs: state.flex.elapsed, fecha: new Date().toISOString() };
-        try { await db.collection("resultados").add(res); showScreen('screenFinal'); } catch (e) { console.error(e); }
+    
+    state.flex.current++;
+    if (state.flex.current < 8) { 
+        renderFlexTrial(); 
+    } else { 
+        finishFlex(); 
     }
+}
 
+async function finishFlex() {
+    state.flex.elapsed = Date.now() - state.flex.startTime;
+    
+    const avgR1 = state.flex.timesR1.length ? Math.round(state.flex.timesR1.reduce((a,b)=>a+b, 0) / state.flex.timesR1.length) : 0;
+    const avgR2 = state.flex.timesR2.length ? Math.round(state.flex.timesR2.reduce((a,b)=>a+b, 0) / state.flex.timesR2.length) : 0;
+
+    const res = { 
+        categoria: "Funciones Ejecutivas", 
+        subcategoria: "Flexibilidad Cognitiva", 
+        nombre: state.user.nombre, 
+        edad: state.user.edad, 
+        curso: state.user.curso, 
+        metricas: { 
+            aciertosR1: state.flex.scoreR1, 
+            aciertosR2: state.flex.scoreR2, 
+            totalAciertos: state.flex.scoreR1 + state.flex.scoreR2,
+            tiempoMedioR1Ms: avgR1,
+            tiempoMedioR2Ms: avgR2,
+            costoCambioMs: avgR2 - avgR1
+        }, 
+        tiempoMs: state.flex.elapsed, 
+        fecha: new Date().toISOString() 
+    };
+    try { 
+        await db.collection("resultados").add(res); 
+        showScreen('screenFinal'); 
+    } catch (e) { 
+        console.error(e); 
+    }
+}
     // ADMIN
     function verifyAdminPassword() { if (document.getElementById('adminPasswordInput').value === ADMIN_PASSWORD) { document.getElementById('adminLogin').style.display = 'none'; document.getElementById('adminDashboard').style.display = 'block'; loadAdminData(); } else { document.getElementById('errorPassword').classList.add('visible'); setTimeout(() => document.getElementById('errorPassword').classList.remove('visible'), 2000); } }
     document.getElementById('adminPasswordInput').addEventListener('keydown', e => { if(e.key === 'Enter') verifyAdminPassword(); });
