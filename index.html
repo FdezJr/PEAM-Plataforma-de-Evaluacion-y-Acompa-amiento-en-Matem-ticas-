@@ -480,7 +480,18 @@ async function finishFlex() {
         document.getElementById('tableMemory2').innerHTML = mem2.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.correctRecalls} / 5</span></td><td><span class="badge badge-warning">${r.metricas.correctMath} / 5</span></td></tr>`).join('') || `<tr><td colspan="5" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
         document.getElementById('tableAttention').innerHTML = att.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertos} / ${r.metricas.totalObjetivo}</span></td><td><span class="badge badge-error">${r.metricas.falsasAlarmas}</span></td><td><span class="badge badge-warning">${r.metricas.omisiones}</span></td></tr>`).join('') || `<tr><td colspan="6" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
         document.getElementById('tableInhibition').innerHTML = inh.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertos}</span></td><td><span class="badge badge-error">${r.metricas.falsasAlarmas}</span></td><td><span class="badge badge-warning">${r.metricas.omisiones}</span></td></tr>`).join('') || `<tr><td colspan="6" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
-        document.getElementById('tableFlex').innerHTML = flex.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertosR1} / 4</span></td><td><span class="badge badge-pink">${r.metricas.aciertosR2} / 4</span></td><td><span class="badge badge-purple">${r.metricas.totalAciertos} / 8</span></td></tr>`).join('') || `<tr><td colspan="6" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
+document.getElementById('tableFlex').innerHTML = flex.map(r => {
+    const avgR1 = r.metricas.tiempoMedioR1Ms ? `${(r.metricas.tiempoMedioR1Ms / 1000).toFixed(2)}s` : '-';
+    const avgR2 = r.metricas.tiempoMedioR2Ms ? `${(r.metricas.tiempoMedioR2Ms / 1000).toFixed(2)}s` : '-';
+    return `<tr>
+        <td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td>
+        <td><strong>${r.nombre}</strong></td>
+        <td>${r.curso}</td>
+        <td><span class="badge badge-success">${r.metricas.aciertosR1} / 4</span> <span class="text-xs text-muted">(${avgR1})</span></td>
+        <td><span class="badge badge-pink">${r.metricas.aciertosR2} / 4</span> <span class="text-xs text-muted">(${avgR2})</span></td>
+        <td><span class="badge badge-purple">${r.metricas.totalAciertos} / 8</span></td>
+    </tr>`;
+}).join('') || `<tr><td colspan="6" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
 
         const users = [...new Set(allAdminData.map(r => r.nombre))].filter(Boolean);
         const select = document.getElementById('chartUserSelect'); select.innerHTML = '<option value="">Selecciona un usuario...</option>'; users.forEach(u => { const o = document.createElement('option'); o.value = u; o.textContent = u; select.appendChild(o); });
