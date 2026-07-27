@@ -246,7 +246,7 @@
    let state = {
         user: { nombre: '', edad: '', curso: '' },
         is12: { trials: [], current: 0, timer: null, itemStartTime: 0, userResponded: false, responses: [] }, // <-- AGREGADO
-        mem1: { numbers: [], correctOrder: [], userOrder: [], startTime: 0, elapsed: 0, interval: null },
+        mem1: { numbers: [], correctOrder: [], userOrder: [], startTime: 0, elapsed: 0, interval: null, currentTrial: 0, totalTrials: 5, results: [] },
         mem2: { trials: [], currentTrial: 0, results: [], startTime: 0, interval: null },
         att: { targetNum: 0, totalTarget: 10, gridNumbers: [], foundCount: 0, wrongClicks: 0, startTime: 0, elapsed: 0 },
         inh: { operations: [], startTime: 0, elapsed: 0 },
@@ -391,7 +391,62 @@
     }
     
     // RETO 1
-    function startMemory1Display() { state.mem1.numbers = []; let a = 0; while (state.mem1.numbers.length < 5 && a < 500) { const n = Math.floor(Math.random() * 18) + 2; if (!state.mem1.numbers.some(e => Math.abs(e - n) < 3)) state.mem1.numbers.push(n); a++; } state.mem1.correctOrder = [...state.mem1.numbers].sort((a, b) => a - b); state.mem1.userOrder = []; const c = document.getElementById('flashcardNumbers1'); c.innerHTML = ''; state.mem1.numbers.forEach(n => { const s = document.createElement('span'); s.className = 'flashcard-num'; s.textContent = n; c.appendChild(s); }); showScreen('screenDisplayMemory1'); const sT = Date.now(); const p = document.getElementById('countdownProgress1'); const tE = document.getElementById('countdownText1'); p.style.strokeDashoffset = '0'; p.style.stroke = 'var(--primary)'; tE.textContent = '10'; tE.style.fill = 'var(--text)'; clearInterval(state.mem1.interval); state.mem1.interval = setInterval(() => { const e = (Date.now() - sT) / 1000; const r = Math.max(0, 10 - e); p.style.strokeDashoffset = CIRC * (1 - r / 10); if (r <= 2) { p.style.stroke = 'var(--error)'; tE.style.fill = 'var(--error)'; } else if (r <= 4) { p.style.stroke = 'var(--accent)'; tE.style.fill = 'var(--accent)'; } tE.textContent = Math.ceil(r); if (r <= 0) { clearInterval(state.mem1.interval); startMemory1Sorting(); } }, 50); }
+   function startMemory1Display() { 
+    // Si inicia desde cero (ronda 1)
+    if (!state.mem1.currentTrial || state.mem1.currentTrial >= state.mem1.totalTrials) {
+        state.mem1.currentTrial = 0;
+        state.mem1.results = [];
+    }
+
+    state.mem1.numbers = []; 
+    let a = 0; 
+    while (state.mem1.numbers.length < 5 && a < 500) { 
+        const n = Math.floor(Math.random() * 18) + 2; 
+        if (!state.mem1.numbers.some(e => Math.abs(e - n) < 3)) state.mem1.numbers.push(n); 
+        a++; 
+    } 
+    
+    state.mem1.correctOrder = [...state.mem1.numbers].sort((a, b) => a - b); 
+    state.mem1.userOrder = []; 
+    
+    const c = document.getElementById('flashcardNumbers1'); 
+    c.innerHTML = ''; 
+    state.mem1.numbers.forEach(n => { 
+        const s = document.createElement('span'); 
+        s.className = 'flashcard-num'; 
+        s.textContent = n; 
+        c.appendChild(s); 
+    }); 
+    
+    showScreen('screenDisplayMemory1'); 
+    
+    const sT = Date.now(); 
+    const p = document.getElementById('countdownProgress1'); 
+    const tE = document.getElementById('countdownText1'); 
+    p.style.strokeDashoffset = '0'; 
+    p.style.stroke = 'var(--primary)'; 
+    tE.textContent = '10'; 
+    tE.style.fill = 'var(--text)'; 
+    
+    clearInterval(state.mem1.interval); 
+    state.mem1.interval = setInterval(() => { 
+        const e = (Date.now() - sT) / 1000; 
+        const r = Math.max(0, 10 - e); 
+        p.style.strokeDashoffset = CIRC * (1 - r / 10); 
+        if (r <= 2) { 
+            p.style.stroke = 'var(--error)'; 
+            tE.style.fill = 'var(--error)'; 
+        } else if (r <= 4) { 
+            p.style.stroke = 'var(--accent)'; 
+            tE.style.fill = 'var(--accent)'; 
+        } 
+        tE.textContent = Math.ceil(r); 
+        if (r <= 0) { 
+            clearInterval(state.mem1.interval); 
+            startMemory1Sorting(); 
+        } 
+    }, 50); 
+}
     function startMemory1Sorting() { 
     showScreen('screenSortingMemory1'); 
     const c = document.getElementById('inputCellsContainer1'); 
@@ -449,11 +504,9 @@
 
     const btn = document.getElementById('btnVerifyMemory1');
     btn.disabled = true; 
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
-
+    
     state.mem1.userOrder = uO; 
-    state.mem1.elapsed = Date.now() - state.mem1.startTime; 
+    const elapsedTrial = Date.now() - state.mem1.startTime; 
     let aC = true; 
     const m = []; 
     for (let i = 0; i < 5; i++) { 
@@ -463,28 +516,58 @@
         } 
     } 
 
-    const res = { 
-        categoria: "Funciones Ejecutivas", 
-        subcategoria: "Memoria de Trabajo - Ordenar", 
-        nombre: state.user.nombre, 
-        edad: state.user.edad, 
-        curso: state.user.curso, 
-        esCorrecto: aC, 
-        errores: m, 
-        tiempoMs: state.mem1.elapsed, 
-        fecha: new Date().toISOString() 
-    }; 
+    // Almacenar el resultado de la ronda actual
+    state.mem1.results.push({
+        ronda: state.mem1.currentTrial + 1,
+        esCorrecto: aC,
+        errores: m,
+        tiempoMs: elapsedTrial
+    });
 
-    try { 
-        await db.collection("resultados").add(res); 
-        btn.innerHTML = originalText;
-        showScreen('screenInstrMemory2'); 
-    } catch (e) { 
-        console.error(e); 
-        showToast("Error al guardar."); 
-        btn.disabled = false; 
-        btn.innerHTML = originalText;
-    } 
+    state.mem1.currentTrial++;
+
+    // Si aún quedan rondas por completar (total = 5)
+    if (state.mem1.currentTrial < state.mem1.totalTrials) {
+        showToast(`Pregunta ${state.mem1.currentTrial} de ${state.mem1.totalTrials} completada.`);
+        startMemory1Display();
+    } else {
+        // Al completar la 5ta pregunta, enviar datos a Firestore
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+        const totalErrores = state.mem1.results.reduce((acc, r) => acc + r.errores.length, 0);
+        const esTodoCorrecto = state.mem1.results.every(r => r.esCorrecto);
+        const tiempoTotalMs = state.mem1.results.reduce((acc, r) => acc + r.tiempoMs, 0);
+
+        const res = { 
+            categoria: "Funciones Ejecutivas", 
+            subcategoria: "Memoria de Trabajo - Ordenar", 
+            nombre: state.user.nombre, 
+            edad: state.user.edad, 
+            curso: state.user.curso, 
+            esCorrecto: esTodoCorrecto, 
+            metricas: {
+                totalRondas: state.mem1.totalTrials,
+                rondasGanadas: state.mem1.results.filter(r => r.esCorrecto).length,
+                totalErrores: totalErrores,
+                detalleRondas: state.mem1.results
+            },
+            errores: state.mem1.results.flatMap(r => r.errores), 
+            tiempoMs: tiempoTotalMs, 
+            fecha: new Date().toISOString() 
+        }; 
+
+        try { 
+            await db.collection("resultados").add(res); 
+            btn.innerHTML = originalText;
+            showScreen('screenInstrMemory2'); 
+        } catch (e) { 
+            console.error(e); 
+            showToast("Error al guardar."); 
+            btn.disabled = false; 
+            btn.innerHTML = originalText;
+        } 
+    }
 }
 
     // RETO 2
