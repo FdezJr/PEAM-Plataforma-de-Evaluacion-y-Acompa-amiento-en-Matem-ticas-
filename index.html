@@ -210,7 +210,48 @@
 
     // RETO 1
     function startMemory1Display() { state.mem1.numbers = []; let a = 0; while (state.mem1.numbers.length < 5 && a < 500) { const n = Math.floor(Math.random() * 18) + 2; if (!state.mem1.numbers.some(e => Math.abs(e - n) < 3)) state.mem1.numbers.push(n); a++; } state.mem1.correctOrder = [...state.mem1.numbers].sort((a, b) => a - b); state.mem1.userOrder = []; const c = document.getElementById('flashcardNumbers1'); c.innerHTML = ''; state.mem1.numbers.forEach(n => { const s = document.createElement('span'); s.className = 'flashcard-num'; s.textContent = n; c.appendChild(s); }); showScreen('screenDisplayMemory1'); const sT = Date.now(); const p = document.getElementById('countdownProgress1'); const tE = document.getElementById('countdownText1'); p.style.strokeDashoffset = '0'; p.style.stroke = 'var(--primary)'; tE.textContent = '10'; tE.style.fill = 'var(--text)'; clearInterval(state.mem1.interval); state.mem1.interval = setInterval(() => { const e = (Date.now() - sT) / 1000; const r = Math.max(0, 10 - e); p.style.strokeDashoffset = CIRC * (1 - r / 10); if (r <= 2) { p.style.stroke = 'var(--error)'; tE.style.fill = 'var(--error)'; } else if (r <= 4) { p.style.stroke = 'var(--accent)'; tE.style.fill = 'var(--accent)'; } tE.textContent = Math.ceil(r); if (r <= 0) { clearInterval(state.mem1.interval); startMemory1Sorting(); } }, 50); }
-    function startMemory1Sorting() { showScreen('screenSortingMemory1'); const c = document.getElementById('inputCellsContainer1'); c.innerHTML = ''; document.getElementById('btnVerifyMemory1').disabled = false; for (let i = 0; i < 5; i++) { const inp = document.createElement('input'); inp.type = 'text'; inp.className = 'input-cell'; inp.id = `cell-${i}`; inp.maxLength = 2; inp.placeholder = i + 1; inp.setAttribute('inputmode', 'numeric'); inp.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); if (e.target.value.length >= 2) { const n = document.getElementById(`cell-${i + 1}`); if (n) n.focus(); else e.target.blur(); } }); c.appendChild(inp); } setTimeout(() => document.getElementById('cell-0').focus(), 100); state.mem1.startTime = Date.now(); }
+    function startMemory1Sorting() { 
+    showScreen('screenSortingMemory1'); 
+    const c = document.getElementById('inputCellsContainer1'); 
+    c.innerHTML = ''; 
+    document.getElementById('btnVerifyMemory1').disabled = false; 
+    
+    for (let i = 0; i < 5; i++) { 
+        const inp = document.createElement('input'); 
+        inp.type = 'text'; 
+        inp.className = 'input-cell'; 
+        inp.id = `cell-${i}`; 
+        inp.maxLength = 2; 
+        inp.placeholder = i + 1; 
+        inp.setAttribute('inputmode', 'numeric'); 
+        inp.setAttribute('pattern', '[0-9]*');
+
+        // Manejo de entrada de texto
+        inp.addEventListener('input', (e) => { 
+            e.target.value = e.target.value.replace(/[^0-9]/g, ''); 
+            if (e.target.value.length >= 2) { 
+                const n = document.getElementById(`cell-${i + 1}`); 
+                if (n) n.focus(); 
+                else e.target.blur(); 
+            } 
+        }); 
+
+        // Manejo de retroceso con Backspace
+        inp.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && e.target.value === '' && i > 0) {
+                const prev = document.getElementById(`cell-${i - 1}`);
+                if (prev) {
+                    prev.focus();
+                    prev.setSelectionRange(prev.value.length, prev.value.length);
+                }
+            }
+        });
+
+        c.appendChild(inp); 
+    } 
+    setTimeout(() => document.getElementById('cell-0').focus(), 100); 
+    state.mem1.startTime = Date.now(); 
+}
     async function verifyMemory1() { const uO = []; for (let i = 0; i < 5; i++) { const inp = document.getElementById(`cell-${i}`); const v = inp.value.trim(); if (v === '') { showToast('Completa todas las celdas.'); inp.focus(); return; } uO.push(parseInt(v)); } document.getElementById('btnVerifyMemory1').disabled = true; state.mem1.userOrder = uO; state.mem1.elapsed = Date.now() - state.mem1.startTime; let aC = true; const m = []; for (let i = 0; i < 5; i++) { if (state.mem1.userOrder[i] !== state.mem1.correctOrder[i]) { aC = false; m.push({ posicion: i + 1, elegido: state.mem1.userOrder[i], correcto: state.mem1.correctOrder[i] }); } } const res = { categoria: "Funciones Ejecutivas", subcategoria: "Memoria de Trabajo - Ordenar", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, esCorrecto: aC, errores: m, tiempoMs: state.mem1.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrMemory2'); } catch (e) { console.error(e); showToast("Error al guardar."); document.getElementById('btnVerifyMemory1').disabled = false; } }
 
     // RETO 2
@@ -222,12 +263,96 @@
     async function finishMemory2() { const res = { categoria: "Funciones Ejecutivas", subcategoria: "Memoria de Trabajo - Distractor", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { correctRecalls: state.mem2.results.filter(r => r.recallCorrect).length, correctMath: state.mem2.results.filter(r => r.mathCorrect).length, totalTrials: 5 }, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrAttention'); } catch (e) { console.error(e); showToast("Error al guardar."); } }
 
     // RETO 3
-    function startAttention() { showScreen('screenPlayAttention'); const gridContainer = document.getElementById('attentionGrid'); gridContainer.innerHTML = ''; state.att.foundCount = 0; state.att.wrongClicks = 0; document.getElementById('attFoundCount').innerText = '0'; state.att.targetNum = Math.floor(Math.random() * 90) + 10; document.getElementById('attTargetDisplay').innerText = state.att.targetNum; document.getElementById('attTotalTarget').innerText = state.att.totalTarget; state.att.gridNumbers = []; for(let i=0; i<state.att.totalTarget; i++) state.att.gridNumbers.push(state.att.targetNum); while(state.att.gridNumbers.length < 64) { const d = Math.floor(Math.random() * 90) + 10; if(d !== state.att.targetNum) state.att.gridNumbers.push(d); } state.att.gridNumbers.sort(() => Math.random() - 0.5); state.att.gridNumbers.forEach((num, index) => { const cell = document.createElement('div'); cell.className = 'grid-cell'; cell.textContent = num; cell.onclick = () => handleCellClick(cell, num); gridContainer.appendChild(cell); }); state.att.startTime = Date.now(); }
+    function startAttention() { 
+    showScreen('screenPlayAttention'); 
+    const gridContainer = document.getElementById('attentionGrid'); 
+    gridContainer.innerHTML = ''; 
+    state.att.foundCount = 0; 
+    state.att.wrongClicks = 0; 
+    document.getElementById('attFoundCount').innerText = '0'; 
+    
+    state.att.targetNum = Math.floor(Math.random() * 90) + 10; 
+    document.getElementById('attTargetDisplay').innerText = state.att.targetNum; 
+    document.getElementById('attTotalTarget').innerText = state.att.totalTarget; 
+    
+    state.att.gridNumbers = []; 
+    // Insertar exactamente la cantidad fijada de números objetivos
+    for (let i = 0; i < state.att.totalTarget; i++) {
+        state.att.gridNumbers.push(state.att.targetNum); 
+    }
+    
+    // Insertar los distractores asegurando que NUNCA coincidan con el objetivo
+    while (state.att.gridNumbers.length < 64) { 
+        const d = Math.floor(Math.random() * 90) + 10; 
+        if (d !== state.att.targetNum) {
+            state.att.gridNumbers.push(d); 
+        }
+    } 
+    
+    state.att.gridNumbers.sort(() => Math.random() - 0.5); 
+    state.att.gridNumbers.forEach((num) => { 
+        const cell = document.createElement('div'); 
+        cell.className = 'grid-cell'; 
+        cell.textContent = num; 
+        cell.onclick = () => handleCellClick(cell, num); 
+        gridContainer.appendChild(cell); 
+    }); 
+    
+    state.att.startTime = Date.now(); 
+}
     function handleCellClick(cell, num) { if(cell.classList.contains('selected') || cell.classList.contains('wrong')) return; if(num === state.att.targetNum) { cell.classList.add('selected'); state.att.foundCount++; document.getElementById('attFoundCount').innerText = state.att.foundCount; if(state.att.foundCount === state.att.totalTarget) { setTimeout(() => verifyAttention(), 500); } } else { cell.classList.add('wrong'); state.att.wrongClicks++; setTimeout(() => cell.classList.remove('wrong'), 500); } }
     async function verifyAttention() { state.att.elapsed = Date.now() - state.att.startTime; const om = state.att.totalTarget - state.att.foundCount; const res = { categoria: "Funciones Ejecutivas", subcategoria: "Atención Sostenida", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { aciertos: state.att.foundCount, falsasAlarmas: state.att.wrongClicks, omisiones: om, totalObjetivo: state.att.totalTarget }, tiempoMs: state.att.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrInhibition'); } catch (e) { console.error(e); } }
 
     // RETO 4
-    function startInhibition() { showScreen('screenOperationsInhibition'); const c = document.getElementById('operationsContainer'); c.innerHTML = ''; state.inh.operations = []; for (let i = 0; i < 8; i++) { const iG = i < 4 ? true : Math.random() > 0.5; const oT = Math.random() > 0.4 ? '+' : '-'; let a, b, r, t; if (oT === '+') { if (iG) { r = Math.floor(Math.random() * 30) + 21; a = Math.floor(Math.random() * (r - 1)) + 1; b = r - a; } else { r = Math.floor(Math.random() * 17) + 3; a = Math.floor(Math.random() * (r - 1)) + 1; b = r - a; } t = `${a} + ${b}`; } else { if (iG) { b = Math.floor(Math.random() * 15) + 1; r = Math.floor(Math.random() * 20) + 21; a = r + b; } else { a = Math.floor(Math.random() * 17) + 3; b = Math.floor(Math.random() * (a - 1)) + 1; r = a - b; } t = `${a} - ${b}`; } state.inh.operations.push({ result: r, textOp: t, esMayor20: r > 20 }); } state.inh.operations.sort(() => Math.random() - 0.5); state.inh.operations.forEach((op, i) => { const r = document.createElement('div'); r.className = 'op-row'; r.innerHTML = `<div class="font-mono text-lg font-bold" style="color: var(--text); min-width: 120px;">${op.textOp} = </div><input type="number" class="op-input" id="op-input-${i}" placeholder="?" autocomplete="off">`; c.appendChild(r); }); state.inh.startTime = Date.now(); }
+   function startInhibition() { 
+    showScreen('screenOperationsInhibition'); 
+    const c = document.getElementById('operationsContainer'); 
+    c.innerHTML = ''; 
+    state.inh.operations = []; 
+    
+    for (let i = 0; i < 8; i++) { 
+        const iG = i < 4 ? true : Math.random() > 0.5; 
+        const oT = Math.random() > 0.4 ? '+' : '-'; 
+        let a, b, r, t; 
+        
+        if (oT === '+') { 
+            if (iG) { 
+                r = Math.floor(Math.random() * 30) + 21; 
+                a = Math.floor(Math.random() * (r - 1)) + 1; 
+                b = r - a; 
+            } else { 
+                r = Math.floor(Math.random() * 17) + 3; 
+                a = Math.floor(Math.random() * (r - 1)) + 1; 
+                b = r - a; 
+            } 
+            t = `${a} + ${b}`; 
+        } else { 
+            if (iG) { 
+                // Resultado > 20
+                r = Math.floor(Math.random() * 20) + 21; // Rango: 21 a 40
+                b = Math.floor(Math.random() * 15) + 1;
+                a = r + b; 
+            } else { 
+                // Resultado <= 20 sin permitir números negativos
+                r = Math.floor(Math.random() * 18) + 2; // Rango: 2 a 19
+                b = Math.floor(Math.random() * 15) + 1;
+                a = r + b; 
+            } 
+            t = `${a} - ${b}`; 
+        } 
+        state.inh.operations.push({ result: r, textOp: t, esMayor20: r > 20 }); 
+    } 
+    
+    state.inh.operations.sort(() => Math.random() - 0.5); 
+    state.inh.operations.forEach((op, i) => { 
+        const r = document.createElement('div'); 
+        r.className = 'op-row'; 
+        r.innerHTML = `<div class="font-mono text-lg font-bold" style="color: var(--text); min-width: 120px;">${op.textOp} = </div><input type="number" class="op-input" id="op-input-${i}" placeholder="?" autocomplete="off" inputmode="numeric">`; 
+        c.appendChild(r); 
+    }); 
+    
+    state.inh.startTime = Date.now(); 
+}
     async function verifyInhibition() { state.inh.elapsed = Date.now() - state.inh.startTime; let a = 0, o = 0, f = 0, rC = 0; state.inh.operations.forEach((op, i) => { const inp = document.getElementById(`op-input-${i}`); const v = inp.value.trim() !== '' ? parseInt(inp.value.trim()) : null; if (op.esMayor20) { if (v === op.result) { a++; } else { o++; } } else { if (v === null) { rC++; } else { f++; } } }); const res = { categoria: "Funciones Ejecutivas", subcategoria: "Control Inhibitorio", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { aciertos: a, omisiones: o, falsasAlarmas: f, rechazosCorrectos: rC }, tiempoMs: state.inh.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrFlex'); } catch (e) { console.error(e); } }
 
     // RETO 5: FLEXIBILIDAD COGNITIVA
