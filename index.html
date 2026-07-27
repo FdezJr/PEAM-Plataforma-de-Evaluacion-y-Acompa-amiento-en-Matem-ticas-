@@ -254,9 +254,95 @@
     };
     let allAdminData = []; let profileChartInstance = null;
 
-    function initRouter() { const urlParams = new URLSearchParams(window.location.search); if (urlParams.has('admin')) { document.getElementById('userApp').style.display = 'none'; document.getElementById('adminApp').classList.add('active'); } else { document.getElementById('userApp').style.display = 'block'; document.getElementById('adminApp').style.display = 'none'; } }
+    PERSISTENCIA Y RECUPERACIÓN DE PROGRESO
+    // ==========================================
+    function saveProgress() {
+        if (!state.user || !state.user.nombre) return;
+        const sessionData = {
+            user: state.user,
+            currentScreen: document.querySelector('#userApp .screen.active')?.id || 'screenRegister',
+            is12: state.is12,
+            mem1: state.mem1,
+            mem2: state.mem2,
+            att: state.att,
+            inh: state.inh,
+            flex: state.flex
+        };
+        localStorage.setItem('retos_matematicos_progress', JSON.stringify(sessionData));
+    }
+
+    function clearProgress() {
+        localStorage.removeItem('retos_matematicos_progress');
+    }
+
+    function restoreProgress() {
+        const saved = localStorage.getItem('retos_matematicos_progress');
+        if (!saved) return false;
+
+        try {
+            const sessionData = JSON.parse(saved);
+            if (sessionData.user && sessionData.user.nombre) {
+                state.user = sessionData.user;
+                state.is12 = sessionData.is12 || state.is12;
+                state.mem1 = sessionData.mem1 || state.mem1;
+                state.mem2 = sessionData.mem2 || state.mem2;
+                state.att = sessionData.att || state.att;
+                state.inh = sessionData.inh || state.inh;
+                state.flex = sessionData.flex || state.flex;
+
+                let screenToRestore = sessionData.currentScreen;
+                if (screenToRestore.includes('Play') || screenToRestore.includes('Sorting') || screenToRestore.includes('Display')) {
+                    if (screenToRestore.includes('Is12')) screenToRestore = 'screenInstrIs12';
+                    else if (screenToRestore.includes('Memory1')) screenToRestore = 'screenInstrMemory1';
+                    else if (screenToRestore.includes('Memory2')) screenToRestore = 'screenInstrMemory2';
+                    else if (screenToRestore.includes('Attention')) screenToRestore = 'screenInstrAttention';
+                    else if (screenToRestore.includes('Inhibition')) screenToRestore = 'screenInstrInhibition';
+                    else if (screenToRestore.includes('Flex')) screenToRestore = 'screenInstrFlex';
+                }
+
+                showScreen(screenToRestore);
+                showToast(`¡Hola de nuevo, ${state.user.nombre}! Recuperamos tu progreso.`);
+                return true;
+            }
+        } catch (e) {
+            console.error("Error recuperando progreso:", e);
+            clearProgress();
+        }
+        return false;
+    }
+
+    // Advertencia antes de cerrar/recargar la pestaña
+    window.addEventListener('beforeunload', function (e) {
+        const activeScreen = document.querySelector('#userApp .screen.active')?.id;
+        if (state.user && state.user.nombre && activeScreen !== 'screenRegister' && activeScreen !== 'screenFinal') {
+            saveProgress();
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    
+    function initRouter() { 
+        const urlParams = new URLSearchParams(window.location.search); 
+        if (urlParams.has('admin')) { 
+            document.getElementById('userApp').style.display = 'none'; 
+            document.getElementById('adminApp').classList.add('active'); 
+        } else { 
+            document.getElementById('userApp').style.display = 'block'; 
+            document.getElementById('adminApp').style.display = 'none'; 
+            
+            // INTENTAR RESTAURAR SESIÓN AL CARGAR
+            restoreProgress(); 
+        } 
+    }
     initRouter();
-    function showScreen(id) { document.querySelectorAll('#userApp .screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+    function showScreen(id) { 
+        document.querySelectorAll('#userApp .screen').forEach(s => s.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+        
+        // GUARDAR AUTOMÁTICAMENTE CADA CAMBIO DE PANTALLA
+        saveProgress(); 
+    }
     function formatTime(ms) { if(!ms) return '-'; const s = Math.floor(ms / 1000); const t = Math.floor((ms % 1000) / 100); return `${s}.${t}s`; }
     function formatDate(iso) { const d = new Date(iso); return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }); }
     function showToast(message) { const existing = document.querySelector('.toast'); if(existing) existing.remove(); const toast = document.createElement('div'); toast.className = 'toast'; toast.textContent = message; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
@@ -780,6 +866,10 @@ async function finishFlex() {
     };
     try { 
         await db.collection("resultados").add(res); 
+        
+        // BORRAR DATOS LOCALES AL COMPLETAR TODAS LAS PRUEBAS
+        clearProgress(); 
+        
         showScreen('screenFinal'); 
     } catch (e) { 
         console.error(e); 
