@@ -397,8 +397,24 @@
         document.getElementById('tableMemory2').innerHTML = mem2.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.correctRecalls} / 5</span></td><td><span class="badge badge-warning">${r.metricas.correctMath} / 5</span></td></tr>`).join('') || `<tr><td colspan="5" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
         document.getElementById('tableAttention').innerHTML = att.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertos} / ${r.metricas.totalObjetivo}</span></td><td><span class="badge badge-error">${r.metricas.falsasAlarmas}</span></td><td><span class="badge badge-warning">${r.metricas.omisiones}</span></td></tr>`).join('') || `<tr><td colspan="6" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
         document.getElementById('tableInhibition').innerHTML = inh.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertos}</span></td><td><span class="badge badge-error">${r.metricas.falsasAlarmas}</span></td><td><span class="badge badge-warning">${r.metricas.omisiones}</span></td></tr>`).join('') || `<tr><td colspan="6" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
-        document.getElementById('tableFlex').innerHTML = flex.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertosR1} / 4</span></td><td><span class="badge badge-pink">${r.metricas.aciertosR2} / 4</span></td><td><span class="badge badge-purple">${r.metricas.totalAciertos} / 8</span></td></tr>`).join('') || `<tr><td colspan="6" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
-
+        document.getElementById('tableFlex').innerHTML = flex.map(r => {
+            const rtR1 = (r.metricas && typeof r.metricas.avgRtR1Ms === 'number') ? `${r.metricas.avgRtR1Ms}ms` : '-';
+            const rtR2 = (r.metricas && typeof r.metricas.avgRtR2Ms === 'number') ? `${r.metricas.avgRtR2Ms}ms` : '-';
+            const sc = (r.metricas && typeof r.metricas.switchCostMs === 'number') ? `${r.metricas.switchCostMs > 0 ? '+' : ''}${r.metricas.switchCostMs}ms` : '-';
+            
+            return `<tr>
+                <td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td>
+                <td><strong>${r.nombre}</strong></td>
+                <td>${r.curso}</td>
+                <td><span class="badge badge-success">${r.metricas.aciertosR1} / 4</span></td>
+                <td><span class="badge badge-pink">${r.metricas.aciertosR2} / 4</span></td>
+                <td><span class="badge badge-purple">${r.metricas.totalAciertos} / 8</span></td>
+                <td class="font-mono text-xs">${rtR1}</td>
+                <td class="font-mono text-xs">${rtR2}</td>
+                <td class="font-mono text-xs"><span class="badge badge-warning">${sc}</span></td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="9" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
+        
         const users = [...new Set(allAdminData.map(r => r.nombre))].filter(Boolean);
         const select = document.getElementById('chartUserSelect'); select.innerHTML = '<option value="">Selecciona un usuario...</option>'; users.forEach(u => { const o = document.createElement('option'); o.value = u; o.textContent = u; select.appendChild(o); });
     }
