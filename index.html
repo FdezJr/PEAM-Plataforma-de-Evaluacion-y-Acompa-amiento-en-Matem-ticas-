@@ -282,9 +282,19 @@
     function startInhibition() { showScreen('screenOperationsInhibition'); const c = document.getElementById('operationsContainer'); c.innerHTML = ''; state.inh.operations = []; for (let i = 0; i < 8; i++) { const iG = i < 4 ? true : Math.random() > 0.5; const oT = Math.random() > 0.4 ? '+' : '-'; let a, b, r, t; if (oT === '+') { if (iG) { r = Math.floor(Math.random() * 30) + 21; a = Math.floor(Math.random() * (r - 1)) + 1; b = r - a; } else { r = Math.floor(Math.random() * 17) + 3; a = Math.floor(Math.random() * (r - 1)) + 1; b = r - a; } t = `${a} + ${b}`; } else { if (iG) { b = Math.floor(Math.random() * 15) + 1; r = Math.floor(Math.random() * 20) + 21; a = r + b; } else { a = Math.floor(Math.random() * 17) + 3; b = Math.floor(Math.random() * (a - 1)) + 1; r = a - b; } t = `${a} - ${b}`; } state.inh.operations.push({ result: r, textOp: t, esMayor20: r > 20 }); } state.inh.operations.sort(() => Math.random() - 0.5); state.inh.operations.forEach((op, i) => { const r = document.createElement('div'); r.className = 'op-row'; r.innerHTML = `<div class="font-mono text-lg font-bold" style="color: var(--text); min-width: 120px;">${op.textOp} = </div><input type="number" class="op-input" id="op-input-${i}" placeholder="?" autocomplete="off">`; c.appendChild(r); }); state.inh.startTime = Date.now(); }
     async function verifyInhibition() { state.inh.elapsed = Date.now() - state.inh.startTime; let a = 0, o = 0, f = 0, rC = 0; state.inh.operations.forEach((op, i) => { const inp = document.getElementById(`op-input-${i}`); const v = inp.value.trim() !== '' ? parseInt(inp.value.trim()) : null; if (op.esMayor20) { if (v === op.result) { a++; } else { o++; } } else { if (v === null) { rC++; } else { f++; } } }); const res = { categoria: "Funciones Ejecutivas", subcategoria: "Control Inhibitorio", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { aciertos: a, omisiones: o, falsasAlarmas: f, rechazosCorrectos: rC }, tiempoMs: state.inh.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrFlex'); } catch (e) { console.error(e); } }
 
-    // RETO 5: FLEXIBILIDAD COGNITIVA
+// RETO 5: FLEXIBILIDAD COGNITIVA (con medición de latencias RT)
     function startFlexibility() {
-        state.flex = { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: Date.now(), elapsed: 0 };
+        state.flex = { 
+            trials: [], 
+            current: 0, 
+            scoreR1: 0, 
+            scoreR2: 0, 
+            timesR1: [], 
+            timesR2: [], 
+            itemStartTime: 0,
+            startTime: Date.now(), 
+            elapsed: 0 
+        };
         for (let i = 0; i < 8; i++) {
             let a = Math.floor(Math.random() * 9) + 2; let b = Math.floor(Math.random() * 9) + 2;
             let op = Math.random() > 0.5 ? '+' : '-';
@@ -317,16 +327,23 @@
             ruleBox.classList.add('rule-shift');
             setTimeout(() => ruleBox.classList.remove('rule-shift'), 400);
         }
+        
+        // Registrar tiempo de inicio del estímulo actual
+        state.flex.itemStartTime = Date.now();
     }
 
     function submitFlex(ans) {
+        const itemLatency = Date.now() - state.flex.itemStartTime;
         let t = state.flex.trials[state.flex.current];
         let correctPar = t.isEven ? 'P' : 'I';
         let correctAns = t.phase === 1 ? correctPar : (correctPar === 'P' ? 'I' : 'P');
         
-        if (ans === correctAns) {
-            if (t.phase === 1) state.flex.scoreR1++; else state.flex.scoreR2++;
-            // Visual feedback could be added here
+        if (t.phase === 1) {
+            state.flex.timesR1.push(itemLatency);
+            if (ans === correctAns) state.flex.scoreR1++;
+        } else {
+            state.flex.timesR2.push(itemLatency);
+            if (ans === correctAns) state.flex.scoreR2++;
         }
         
         state.flex.current++;
@@ -336,10 +353,31 @@
 
     async function finishFlex() {
         state.flex.elapsed = Date.now() - state.flex.startTime;
-        const res = { categoria: "Funciones Ejecutivas", subcategoria: "Flexibilidad Cognitiva", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { aciertosR1: state.flex.scoreR1, aciertosR2: state.flex.scoreR2, totalAciertos: state.flex.scoreR1 + state.flex.scoreR2 }, tiempoMs: state.flex.elapsed, fecha: new Date().toISOString() };
+        
+        // Cálculo de promedios de latencia (RT) y Costo de Cambio (Switch Cost)
+        const avgRtR1 = state.flex.timesR1.length ? Math.round(state.flex.timesR1.reduce((a,b)=>a+b, 0) / state.flex.timesR1.length) : 0;
+        const avgRtR2 = state.flex.times2 ? Math.round(state.flex.timesR2.reduce((a,b)=>a+b, 0) / state.flex.timesR2.length) : (state.flex.timesR2.length ? Math.round(state.flex.timesR2.reduce((a,b)=>a+b, 0) / state.flex.timesR2.length) : 0);
+        const switchCost = avgRtR2 - avgRtR1;
+
+        const res = { 
+            categoria: "Funciones Ejecutivas", 
+            subcategoria: "Flexibilidad Cognitiva", 
+            nombre: state.user.nombre, 
+            edad: state.user.edad, 
+            curso: state.user.curso, 
+            metricas: { 
+                aciertosR1: state.flex.scoreR1, 
+                aciertosR2: state.flex.scoreR2, 
+                totalAciertos: state.flex.scoreR1 + state.flex.scoreR2,
+                avgRtR1Ms: avgRtR1,
+                avgRtR2Ms: avgRtR2,
+                switchCostMs: switchCost
+            }, 
+            tiempoMs: state.flex.elapsed, 
+            fecha: new Date().toISOString() 
+        };
         try { await db.collection("resultados").add(res); showScreen('screenFinal'); } catch (e) { console.error(e); }
     }
-
     // ADMIN
     function verifyAdminPassword() { if (document.getElementById('adminPasswordInput').value === ADMIN_PASSWORD) { document.getElementById('adminLogin').style.display = 'none'; document.getElementById('adminDashboard').style.display = 'block'; loadAdminData(); } else { document.getElementById('errorPassword').classList.add('visible'); setTimeout(() => document.getElementById('errorPassword').classList.remove('visible'), 2000); } }
     document.getElementById('adminPasswordInput').addEventListener('keydown', e => { if(e.key === 'Enter') verifyAdminPassword(); });
