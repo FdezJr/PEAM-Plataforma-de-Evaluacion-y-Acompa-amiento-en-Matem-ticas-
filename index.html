@@ -176,8 +176,8 @@
                 <button class="tab-btn" onclick="switchTab('tabChart', this)">Perfil</button>
             </div>
             <div id="tabMem"><h3 class="text-lg font-bold mb-4" style="color: var(--primary);">Reto 1: Ordenar</h3><div class="table-wrap mb-8"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Resultado</th><th>Errores</th></tr></thead><tbody id="tableMemory1"></tbody></table></div><h3 class="text-lg font-bold mb-4" style="color: var(--primary);">Reto 2: Distractor</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Recuerdo</th><th>Cálculo</th></tr></thead><tbody id="tableMemory2"></tbody></table></div></div>
-            <div id="tabAtt" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos</th><th>Falsas Alarmas</th><th>Omisiones</th></tr></thead><tbody id="tableAttention"></tbody></table></div></div>
-            <div id="tabInh" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos</th><th>Falsas Alarmas</th><th>Omisiones</th></tr></thead><tbody id="tableInhibition"></tbody></table></div></div>
+            <div id="tabAtt" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos</th><th>Falsas Alarmas</th><th>Omisiones</th><th>Tiempo</th></tr></thead><tbody id="tableAttention"></tbody></table></div></div>
+            <div id="tabInh" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos</th><th>Falsas Alarmas</th><th>Omisiones</th><th>Tiempo</th></tr></thead><tbody id="tableInhibition"></tbody></table></div></div>
             <div id="tabFlex" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos R1</th><th>Aciertos R2</th><th>Total</th></tr></thead><tbody id="tableFlex"></tbody></table></div></div>
             <div id="tabChart" style="display: none;"><div class="glass-card"><h3 class="text-xl font-bold mb-4">Perfil de Funciones Ejecutivas (%)</h3><div class="mb-6"><select id="chartUserSelect" class="input-field" onchange="renderProfileChart()"><option value="">Selecciona un usuario...</option></select></div><div style="max-width: 500px; margin: 0 auto; position: relative;"><canvas id="profileChart"></canvas></div></div></div>
         </div>
@@ -252,7 +252,58 @@
     setTimeout(() => document.getElementById('cell-0').focus(), 100); 
     state.mem1.startTime = Date.now(); 
 }
-    async function verifyMemory1() { const uO = []; for (let i = 0; i < 5; i++) { const inp = document.getElementById(`cell-${i}`); const v = inp.value.trim(); if (v === '') { showToast('Completa todas las celdas.'); inp.focus(); return; } uO.push(parseInt(v)); } document.getElementById('btnVerifyMemory1').disabled = true; state.mem1.userOrder = uO; state.mem1.elapsed = Date.now() - state.mem1.startTime; let aC = true; const m = []; for (let i = 0; i < 5; i++) { if (state.mem1.userOrder[i] !== state.mem1.correctOrder[i]) { aC = false; m.push({ posicion: i + 1, elegido: state.mem1.userOrder[i], correcto: state.mem1.correctOrder[i] }); } } const res = { categoria: "Funciones Ejecutivas", subcategoria: "Memoria de Trabajo - Ordenar", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, esCorrecto: aC, errores: m, tiempoMs: state.mem1.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrMemory2'); } catch (e) { console.error(e); showToast("Error al guardar."); document.getElementById('btnVerifyMemory1').disabled = false; } }
+  async function verifyMemory1() { 
+    const uO = []; 
+    for (let i = 0; i < 5; i++) { 
+        const inp = document.getElementById(`cell-${i}`); 
+        const v = inp.value.trim(); 
+        if (v === '') { 
+            showToast('Completa todas las celdas.'); 
+            inp.focus(); 
+            return; 
+        } 
+        uO.push(parseInt(v)); 
+    } 
+
+    const btn = document.getElementById('btnVerifyMemory1');
+    btn.disabled = true; 
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+    state.mem1.userOrder = uO; 
+    state.mem1.elapsed = Date.now() - state.mem1.startTime; 
+    let aC = true; 
+    const m = []; 
+    for (let i = 0; i < 5; i++) { 
+        if (state.mem1.userOrder[i] !== state.mem1.correctOrder[i]) { 
+            aC = false; 
+            m.push({ posicion: i + 1, elegido: state.mem1.userOrder[i], correcto: state.mem1.correctOrder[i] }); 
+        } 
+    } 
+
+    const res = { 
+        categoria: "Funciones Ejecutivas", 
+        subcategoria: "Memoria de Trabajo - Ordenar", 
+        nombre: state.user.nombre, 
+        edad: state.user.edad, 
+        curso: state.user.curso, 
+        esCorrecto: aC, 
+        errores: m, 
+        tiempoMs: state.mem1.elapsed, 
+        fecha: new Date().toISOString() 
+    }; 
+
+    try { 
+        await db.collection("resultados").add(res); 
+        btn.innerHTML = originalText;
+        showScreen('screenInstrMemory2'); 
+    } catch (e) { 
+        console.error(e); 
+        showToast("Error al guardar."); 
+        btn.disabled = false; 
+        btn.innerHTML = originalText;
+    } 
+}
 
     // RETO 2
     function startMemory2() { state.mem2.trials = []; state.mem2.results = []; state.mem2.currentTrial = 0; for (let i = 0; i < 5; i++) { const n = Math.floor(Math.random() * 900) + 100; const a = Math.floor(Math.random() * 15) + 2; const b = Math.floor(Math.random() * 10) + 2; const op = Math.random() > 0.5 ? '+' : '-'; let mathText, mathResult; if (op === '+') { mathText = `${a} + ${b}`; mathResult = a + b; } else { const max = Math.max(a, b), min = Math.min(a, b); mathText = `${max} - ${min}`; mathResult = max - min; } state.mem2.trials.push({ targetNum: n, mathText: mathText, mathResult: mathResult }); } showScreen('screenPlayMemory2'); startMem2Trial(); }
@@ -415,6 +466,14 @@ function submitFlex(ans) {
     let correctPar = t.isEven ? 'P' : 'I';
     let correctAns = t.phase === 1 ? correctPar : (correctPar === 'P' ? 'I' : 'P');
     
+    // Feedback visual en el botón seleccionado
+    const btnClass = ans === 'P' ? '.pi-btn-p' : '.pi-btn-i';
+    const targetBtn = document.querySelector(`#screenPlayFlex ${btnClass}`);
+    if (targetBtn) {
+        targetBtn.style.transform = 'scale(0.92)';
+        setTimeout(() => { targetBtn.style.transform = ''; }, 120);
+    }
+
     if (t.phase === 1) {
         state.flex.timesR1.push(responseTime);
         if (ans === correctAns) state.flex.scoreR1++;
@@ -478,9 +537,9 @@ async function finishFlex() {
 
         document.getElementById('tableMemory1').innerHTML = mem1.map(r => { const b = r.esCorrecto ? '<span class="badge badge-success">Correcto</span>' : '<span class="badge badge-error">Incorrecto</span>'; const e = r.errores.length === 0 ? 'Ninguno' : r.errores.map(e => `Pos.${e.posicion}: ${e.elegido} (Era ${e.correcto})`).join('<br>'); return `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td>${b}</td><td class="text-xs">${e}</td></tr>`; }).join('') || `<tr><td colspan="5" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
         document.getElementById('tableMemory2').innerHTML = mem2.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.correctRecalls} / 5</span></td><td><span class="badge badge-warning">${r.metricas.correctMath} / 5</span></td></tr>`).join('') || `<tr><td colspan="5" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
-        document.getElementById('tableAttention').innerHTML = att.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertos} / ${r.metricas.totalObjetivo}</span></td><td><span class="badge badge-error">${r.metricas.falsasAlarmas}</span></td><td><span class="badge badge-warning">${r.metricas.omisiones}</span></td></tr>`).join('') || `<tr><td colspan="6" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
-        document.getElementById('tableInhibition').innerHTML = inh.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertos}</span></td><td><span class="badge badge-error">${r.metricas.falsasAlarmas}</span></td><td><span class="badge badge-warning">${r.metricas.omisiones}</span></td></tr>`).join('') || `<tr><td colspan="6" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
-document.getElementById('tableFlex').innerHTML = flex.map(r => {
+        document.getElementById('tableAttention').innerHTML = att.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertos} / ${r.metricas.totalObjetivo}</span></td><td><span class="badge badge-error">${r.metricas.falsasAlarmas}</span></td><td><span class="badge badge-warning">${r.metricas.omisiones}</span></td><td class="font-mono text-xs">${formatTime(r.tiempoMs)}</td></tr>`).join('') || `<tr><td colspan="7" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
+
+document.getElementById('tableInhibition').innerHTML = inh.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertos}</span></td><td><span class="badge badge-error">${r.metricas.falsasAlarmas}</span></td><td><span class="badge badge-warning">${r.metricas.omisiones}</span></td><td class="font-mono text-xs">${formatTime(r.tiempoMs)}</td></tr>`).join('') || `<tr><td colspan="7" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
     const avgR1 = r.metricas.tiempoMedioR1Ms ? `${(r.metricas.tiempoMedioR1Ms / 1000).toFixed(2)}s` : '-';
     const avgR2 = r.metricas.tiempoMedioR2Ms ? `${(r.metricas.tiempoMedioR2Ms / 1000).toFixed(2)}s` : '-';
     return `<tr>
