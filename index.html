@@ -218,7 +218,9 @@
         </section>
 
         <!-- PANTALLA FINAL -->
-        <section class="screen" id="screenFinal"><div class="glass-card text-center"><div class="text-6xl mb-6">🎉</div><h2 class="text-2xl font-bold mb-2" style="color: var(--success);">GRACIAS POR PARTICIPAR EN ESTOS RETOS MATEMÁTICOS</h2><p style="color: var(--text-muted);" class="mb-8">Tus respuestas han sido registradas con éxito.</p></div></section>
+        <section class="screen" id="screenFinal"><div class="glass-card text-center"><button class="btn-primary w-full mt-4" onclick="restartAllChallenges()">
+    <i class="fa-solid fa-rotate-right"></i> Repetir todos los retos
+</button><div class="text-6xl mb-6">🎉</div><h2 class="text-2xl font-bold mb-2" style="color: var(--success);">GRACIAS POR PARTICIPAR EN ESTOS RETOS MATEMÁTICOS</h2><p style="color: var(--text-muted);" class="mb-8">Tus respuestas han sido registradas con éxito.</p></div></section>
         <!-- Modal genérico para ver instrucciones sin salir -->
 <div id="instructionModal" class="modal-overlay">
     <div class="modal-content text-center">
@@ -995,6 +997,21 @@ async function finishFlex() {
     } catch (e) { 
         console.error(e); 
     }
+}
+    function restartAllChallenges() {
+    // 1. Limpiar cualquier progreso en el almacenamiento local
+    clearProgress();
+
+    // 2. Reiniciar los estados de las pruebas conservando la información del usuario
+    state.is12 = { trials: [], current: 0, timer: null, itemStartTime: 0, userResponded: false, responses: [] };
+    state.mem1 = { numbers: [], correctOrder: [], userOrder: [], startTime: 0, elapsed: 0, interval: null, currentTrial: 0, totalTrials: 5, results: [] };
+    state.mem2 = { trials: [], currentTrial: 0, results: [], startTime: 0, interval: null };
+    state.att = { targetNum: 0, totalTarget: 10, gridNumbers: [], foundCount: 0, wrongClicks: 0, startTime: 0, elapsed: 0 };
+    state.inh = { operations: [], startTime: 0, elapsed: 0 };
+    state.flex = { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: 0, elapsed: 0 };
+
+    // 3. Redirigir a la pantalla de instrucciones del primer reto
+    showScreen('screenInstrIs12');
 }
     // ADMIN
     function verifyAdminPassword() { if (document.getElementById('adminPasswordInput').value === ADMIN_PASSWORD) { document.getElementById('adminLogin').style.display = 'none'; document.getElementById('adminDashboard').style.display = 'block'; loadAdminData(); } else { document.getElementById('errorPassword').classList.add('visible'); setTimeout(() => document.getElementById('errorPassword').classList.remove('visible'), 2000); } }
