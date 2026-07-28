@@ -445,17 +445,31 @@ function showCurrentInstructions() {
     const content = instructionsContent[activeScreen];
     
     if (content) {
+        // Pausar temporizadores activos
+        clearTimeout(state.is12.timer);
+        clearInterval(state.mem1.interval);
+        clearInterval(state.mem2.interval);
+
         document.getElementById('modalTitle').innerHTML = content.title;
         document.getElementById('modalBody').innerHTML = content.body;
         document.getElementById('instructionModal').classList.add('active');
-        
-        // Opcional: Pausar temporizadores aquí si lo consideras necesario para tu flujo
     }
 }
 
 function closeInstructions() {
     document.getElementById('instructionModal').classList.remove('active');
+    const activeScreen = document.querySelector('#userApp .screen.active').id;
+
+    // Reanudar o reiniciar el temporizador del reto actual al cerrar
+    if (activeScreen === 'screenPlayIs12') {
+        nextIs12Trial(); // Pasa o reanuda el ítem de la prueba "¿Es 12?"
+    } else if (activeScreen === 'screenDisplayMemory1') {
+        startMemory1Display(); // Reinicia el conteo de memorización de 10s
+    } else if (activeScreen === 'screenPlayMemory2' && document.getElementById('mem2Phase1').style.display !== 'none') {
+        startMem2Trial(); // Reinicia el conteo de memorización de 5s si estaba en la Fase 1
+    }
 }
+    
 // RETO ATENCIÓN SOSTENIDA I: ¿ES 12?
     function generateIs12Trials() {
         let targets = [];
