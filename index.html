@@ -131,20 +131,6 @@
                     <div class="mb-7"><label class="label-text">Curso</label><input type="text" id="inputCourse" class="input-field" placeholder="Ej: 6to Grado A" required><div class="error-msg" id="errorCourse">Ingresa tu curso</div></div>
                     <button type="submit" class="btn-primary w-full"><i class="fa-solid fa-play"></i> Comenzar retos</button>
                 </form>
-                <!-- Modal genérico para ver instrucciones sin salir -->
-<div id="instructionModal" class="modal-overlay">
-    <div class="modal-content text-center">
-        <button class="modal-close" onclick="closeInstructions()"><i class="fa-solid fa-xmark"></i></button>
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4" style="background: rgba(123, 139, 170, 0.15);">
-            <i class="fa-solid fa-circle-info text-xl" style="color: var(--text);"></i>
-        </div>
-        <h2 class="text-xl font-bold mb-4" id="modalTitle">Instrucciones</h2>
-        <div id="modalBody" class="text-left text-sm modal-body" style="color: var(--text-muted);">
-            <!-- El contenido se inyecta por JS -->
-        </div>
-        <button class="btn-ghost w-full mt-6" onclick="closeInstructions()">Entendido</button>
-    </div>
-</div>
             </div>
         </section>
 <!-- RETO: ES 12 (ATENCIÓN SOSTENIDA I) -->
@@ -233,6 +219,20 @@
 
         <!-- PANTALLA FINAL -->
         <section class="screen" id="screenFinal"><div class="glass-card text-center"><div class="text-6xl mb-6">🎉</div><h2 class="text-2xl font-bold mb-2" style="color: var(--success);">GRACIAS POR PARTICIPAR EN ESTOS RETOS MATEMÁTICOS</h2><p style="color: var(--text-muted);" class="mb-8">Tus respuestas han sido registradas con éxito.</p></div></section>
+        <!-- Modal genérico para ver instrucciones sin salir -->
+<div id="instructionModal" class="modal-overlay">
+    <div class="modal-content text-center">
+        <button class="modal-close" onclick="closeInstructions()"><i class="fa-solid fa-xmark"></i></button>
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl mb-4" style="background: rgba(123, 139, 170, 0.15);">
+            <i class="fa-solid fa-circle-info text-xl" style="color: var(--text);"></i>
+        </div>
+        <h2 class="text-xl font-bold mb-4" id="modalTitle">Instrucciones</h2>
+        <div id="modalBody" class="text-left text-sm modal-body" style="color: var(--text-muted);">
+            <!-- El contenido se inyecta por JS -->
+        </div>
+        <button class="btn-ghost w-full mt-6" onclick="closeInstructions()">Entendido</button>
+    </div>
+</div>
     </div>
 
     <!-- ADMINISTRADOR -->
