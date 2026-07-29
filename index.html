@@ -427,7 +427,8 @@
         inh: { operations: [], startTime: 0, elapsed: 0 },
         inh2: { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] },
         flex: { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: 0, elapsed: 0 },
-        flex2: { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] } // <-- AÑADIDO
+        flex2: { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] }, // <-- AÑADIDO
+        restInfo: null
     };
     let allAdminData = []; let profileChartInstance = null;
 
@@ -445,7 +446,8 @@
             inh: state.inh,
             inh2: state.inh2,
             flex: state.flex,
-            flex2: state.flex2 // <-- AÑADIDO
+            flex2: state.flex2, // <-- AÑADIDO
+            restInfo: state.restInfo
         };
         localStorage.setItem('retos_matematicos_progress', JSON.stringify(sessionData));
     }
@@ -468,6 +470,8 @@
                 state.inh = sessionData.inh || state.inh;
                 state.inh2 = sessionData.inh2 || state.inh2;
                 state.flex = sessionData.flex || state.flex;
+                state.flex2 = sessionData.flex2 || state.flex2;
+                state.restInfo = sessionData.restInfo || null;
 
                 let screenToRestore = sessionData.currentScreen;
                 if (screenToRestore.includes('Play') || screenToRestore.includes('Sorting') || screenToRestore.includes('Display')) {
@@ -481,7 +485,11 @@
                     else if (screenToRestore.includes('Flex')) screenToRestore = 'screenInstrFlex';
                 }
 
-                showScreen(screenToRestore);
+                if (screenToRestore === 'screenRest' && state.restInfo && state.restInfo.nextScreenId) {
+                    startRestScreen(state.restInfo.nextScreenId, state.restInfo.step);
+                } else {
+                    showScreen(screenToRestore);
+                }
                 showToast(`¡Hola de nuevo, ${state.user.nombre}! Recuperamos tu progreso.`);
                 return true;
             }
@@ -540,6 +548,8 @@ function checkSavedProgress() {
     let restTimer = null;
     function startRestScreen(nextScreenId, step) {
         showScreen('screenRest');
+        state.restInfo = { nextScreenId, step };
+        saveProgress();
         
         const messages = {
             1: "¡Excelente trabajo con la atención! Tómate un respiro, relaja la vista y prepárate para los retos de memoria.",
