@@ -1583,21 +1583,27 @@ async function finishFlex() {
         const userName = document.getElementById('chartUserSelect').value;
         if (!userName) { if(profileChartInstance) profileChartInstance.destroy(); return; }
         const userData = allAdminData.filter(r => r.nombre === userName);
-        
+        const latestByCategory = {};
+
+userData.forEach(item => {
+    if (!latestByCategory[item.subcategoria]) {
+        latestByCategory[item.subcategoria] = item;
+    }
+});
         let memScore = 0, attScore = 0, inhScore = 0, flexScore = 0;
 
-        const m1 = userData.find(r => r.subcategoria === "Memoria de Trabajo - Ordenar");
-        const m2 = userData.find(r => r.subcategoria === "Memoria de Trabajo - Distractor");
+        const m1 = latestByCategory["Memoria de Trabajo - Ordenar"];
+        const m2 = latestByCategory["Memoria de Trabajo - Distractor"];
         let m1Score = m1 ? ((5 - m1.errores.length) / 5) * 100 : null;
         let m2Score = m2 ? (m2.metricas.correctRecalls / 5) * 100 : null;
         if (m1Score !== null && m2Score !== null) memScore = (m1Score + m2Score) / 2;
         else if (m1Score !== null) memScore = m1Score; else if (m2Score !== null) memScore = m2Score;
 
-        const att = userData.find(r => r.subcategoria === "Atención Sostenida");
+       const att = latestByCategory["Atención Sostenida"];
         if (att) { let hitScore = (att.metricas.aciertos / att.metricas.totalObjetivo) * 50; let totalDistractors = 64 - att.metricas.totalObjetivo; let correctIgnores = Math.max(0, totalDistractors - att.metricas.falsasAlarmas); let ignoreScore = totalDistractors > 0 ? (correctIgnores / totalDistractors) * 50 : 50; attScore = hitScore + ignoreScore; }
 
-        const inh = userData.find(r => r.subcategoria === "Control Inhibitorio");
-        const inh2 = userData.find(r => r.subcategoria === "Control Inhibitorio - Conteo");
+        const inh = latestByCategory["Control Inhibitorio"];
+        const inh2 = latestByCategory["Control Inhibitorio - Conteo"];
        let inh1Score = null;
         if (inh) { 
             let totalPos = inh.metricas.aciertos + inh.metricas.omisiones; 
@@ -1620,8 +1626,8 @@ async function finishFlex() {
             inhScore = inh2ValScore;
         }
 
-        const flex = userData.find(r => r.subcategoria === "Flexibilidad Cognitiva");
-const flex2 = userData.find(r => r.subcategoria === "Flexibilidad Cognitiva - Interruptor");
+        const flex = latestByCategory["Flexibilidad Cognitiva"];
+const flex2 = latestByCategory["Flexibilidad Cognitiva - Interruptor"];
 
 let flex1Score = null;
 let flex2Score = null;
@@ -1641,7 +1647,22 @@ if (flex1Score !== null && flex2Score !== null) {
 } else if (flex2Score !== null) {
     flexScore = flex2Score;
 }
+console.log({
+    memScore,
+    attScore,
+    inhScore,
+    flexScore
+});
+memScore = Number.isFinite(memScore) ? memScore : 0;
+attScore = Number.isFinite(attScore) ? attScore : 0;
+inhScore = Number.isFinite(inhScore) ? inhScore : 0;
+flexScore = Number.isFinite(flexScore) ? flexScore : 0;
 
+memScore = Math.max(0, Math.min(100, memScore));
+attScore = Math.max(0, Math.min(100, attScore));
+inhScore = Math.max(0, Math.min(100, inhScore));
+flexScore = Math.max(0, Math.min(100, flexScore));
+        
         const data = {
             labels: ['Memoria de Trabajo', 'Atención Sostenida', 'Control Inhibitorio', 'Flexibilidad Cognitiva'],
             datasets: [{
@@ -1708,7 +1729,7 @@ const canvas = document.getElementById('profileChart');
 if (!canvas) return;
         
         if (profileChartInstance) profileChartInstance.destroy();
-        const ctx = document.getElementById('profileChart').getContext('2d');
+        const ctx = canvas.getContext('2d');
         profileChartInstance = new Chart(ctx, config);
     }
 </script>
