@@ -1647,10 +1647,10 @@ if (flex1Score !== null && flex2Score !== null) {
             datasets: [{
                 label: 'Nivel (%)',
                 data: [
-    Number.isFinite(memScore) ? +memScore.toFixed(1) : 0,
-    Number.isFinite(attScore) ? +attScore.toFixed(1) : 0,
-    Number.isFinite(inhScore) ? +inhScore.toFixed(1) : 0,
-    Number.isFinite(flexScore) ? +flexScore.toFixed(1) : 0
+    Number(memScore.toFixed(1)),
+    Number(attScore.toFixed(1)),
+    Number(inhScore.toFixed(1)),
+    Number(flexScore.toFixed(1))
 ],
                 fill: true,
                 backgroundColor: 'rgba(20, 184, 166, 0.2)',
@@ -1685,12 +1685,12 @@ if (flex1Score !== null && flex2Score !== null) {
                                 }
                             },
                             ticks: {
-                                beginAtZero: true,
-                                max: 100, // Ajusta esto si tus datos no llegan a 100
-                                stepSize: 20,
-                                color: '#7b8baa', // Tu variable --text-muted
-                                backdropColor: 'transparent' // ¡ESTO ES CLAVE! Quita el cuadro blanco de los números
-                            }
+    beginAtZero: true,
+    max: 100,
+    stepSize: 20,
+    color: '#7b8baa',
+    backdropColor: 'transparent'
+}
                         }
                     },
                     plugins: {
