@@ -406,7 +406,7 @@
                 </div>
             </div>
             <div id="tabAtt" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos</th><th>Falsas Alarmas</th><th>Omisiones</th><th>Tiempo</th></tr></thead><tbody id="tableAttention"></tbody></table></div></div>
-            <div id="tabInh" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos</th><th>Falsas Alarmas</th><th>Omisiones</th><th>Tiempo</th></tr></thead><tbody id="tableInhibition"></tbody></table></div></div>
+            <div id="tabInh" style="display: none;"><h3 class="text-lg font-bold mb-4" style="color: var(--primary);">Reto 4.1: Mayor/Menor a 20</h3><div class="table-wrap mb-8"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos</th><th>Falsas Alarmas</th><th>Omisiones</th><th>Tiempo</th></tr></thead><tbody id="tableInhibition"></tbody></table></div><h3 class="text-lg font-bold mb-4" style="color: var(--primary);">Reto 4.2: Conteo</h3><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos</th><th>Errores</th><th>Omisiones</th><th>Tiempo</th></tr></thead><tbody id="tableInhibition2"></tbody></table></div></div>
             <div id="tabFlex" style="display: none;"><div class="table-wrap"><table class="data-table"><thead><tr><th>Fecha</th><th>Nombre</th><th>Curso</th><th>Aciertos R1</th><th>Aciertos R2</th><th>Total</th></tr></thead><tbody id="tableFlex"></tbody></table></div></div>
             <div id="tabChart" style="display: none;"><div class="glass-card"><h3 class="text-xl font-bold mb-4">Perfil de Funciones Ejecutivas (%)</h3><div class="mb-6"><select id="chartUserSelect" class="input-field" onchange="renderProfileChart()"><option value="">Selecciona un usuario...</option></select></div><div style="max-width: 500px; margin: 0 auto; position: relative;"><canvas id="profileChart"></canvas></div></div></div>
         </div>
@@ -1535,6 +1535,7 @@ async function finishFlex() {
     const mem2 = allAdminData.filter(r => r.subcategoria === "Memoria de Trabajo - Distractor");
     const att = allAdminData.filter(r => r.subcategoria === "Atención Sostenida");
     const inh = allAdminData.filter(r => r.subcategoria === "Control Inhibitorio");
+    const inh2Table = allAdminData.filter(r => r.subcategoria === "Control Inhibitorio - Conteo");
     const flex = allAdminData.filter(r => r.subcategoria === "Flexibilidad Cognitiva");
 
     // 1. Memoria 1
@@ -1552,6 +1553,8 @@ async function finishFlex() {
 
     // 4. Inhibición
     document.getElementById('tableInhibition').innerHTML = inh.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertos}</span></td><td><span class="badge badge-error">${r.metricas.falsasAlarmas}</span></td><td><span class="badge badge-warning">${r.metricas.omisiones}</span></td><td class="font-mono text-xs">${formatTime(r.tiempoMs)}</td></tr>`).join('') || `<tr><td colspan="7" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
+
+    document.getElementById('tableInhibition2').innerHTML = inh2Table.map(r => `<tr><td class="font-mono text-xs whitespace-nowrap">${formatDate(r.fecha)}</td><td><strong>${r.nombre}</strong></td><td>${r.curso}</td><td><span class="badge badge-success">${r.metricas.aciertos} / 20</span></td><td><span class="badge badge-error">${r.metricas.errores}</span></td><td><span class="badge badge-warning">${r.metricas.omisiones}</span></td><td class="font-mono text-xs">${formatTime(r.metricas.tiempoMedioRT)}</td></tr>`).join('') || `<tr><td colspan="7" class="text-center py-6" style="color: var(--text-muted);">Sin datos</td></tr>`;
 
     // 5. Flexibilidad (CORREGIDO)
     document.getElementById('tableFlex').innerHTML = flex.map(r => {
