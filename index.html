@@ -207,7 +207,7 @@
                 <div class="text-left space-y-3 mb-8" style="color: var(--text-muted);">
                     <p>1. Verás un número repetido varias veces en pantalla.</p>
                     <p>2. Selecciona la <strong style="color: var(--accent);">CANTIDAD de veces</strong> que aparece, ignorando qué número es.</p>
-                    <p>3. Tienes solo <strong style="color: var(--text);">2 segundos</strong> por cada estímulo.</p>
+                    <p>3. Tienes solo <strong style="color: var(--text);">3 segundos</strong> por cada estímulo.</p>
                 </div>
                 <button class="btn-accent" onclick="startInhibition2()"><i class="fa-solid fa-play"></i> Comenzar</button>
             </div>
@@ -489,7 +489,7 @@ const instructionsContent = {
 
     'screenPlayInhibition2': {
         title: 'Reto 4.2: Conteo Inhibitorio',
-        body: '<p>1. Verás un número repetido varias veces.</p><p>2. Selecciona la <strong style="color: var(--accent);">CANTIDAD</strong> de veces que aparece.</p><p>3. Ignora qué número es. ¡Tienes solo <strong>2 segundos</strong>!</p>'
+        body: '<p>1. Verás un número repetido varias veces.</p><p>2. Selecciona la <strong style="color: var(--accent);">CANTIDAD</strong> de veces que aparece.</p><p>3. Ignora qué número es. ¡Tienes solo <strong>3 segundos</strong>!</p>'
     },
     
     'screenPlayFlex': { 
@@ -977,7 +977,7 @@ function closeInstructions() {
         const p = document.getElementById('countdownProgressInh2');
         p.style.strokeDashoffset = '0';
         state.inh2.itemStartTime = Date.now();
-        const duration = 2000; 
+        const duration = 3000; 
 
         state.inh2.timer = setInterval(() => {
             const elapsed = Date.now() - state.inh2.itemStartTime;
