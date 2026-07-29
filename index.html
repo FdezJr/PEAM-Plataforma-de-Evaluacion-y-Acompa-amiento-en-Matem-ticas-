@@ -385,6 +385,7 @@
                     else if (screenToRestore.includes('Memory1')) screenToRestore = 'screenInstrMemory1';
                     else if (screenToRestore.includes('Memory2')) screenToRestore = 'screenInstrMemory2';
                     else if (screenToRestore.includes('Attention')) screenToRestore = 'screenInstrAttention';
+                    else if (screenToRestore.includes('Inhibition2')) screenToRestore = 'screenInstrInhibition2';
                     else if (screenToRestore.includes('Inhibition')) screenToRestore = 'screenInstrInhibition';
                     else if (screenToRestore.includes('Flex')) screenToRestore = 'screenInstrFlex';
                 }
@@ -506,6 +507,7 @@ function showCurrentInstructions() {
         clearTimeout(state.is12.timer);
         clearInterval(state.mem1.interval);
         clearInterval(state.mem2.interval);
+        clearInterval(state.inh2.timer);
 
         document.getElementById('modalTitle').innerHTML = content.title;
         document.getElementById('modalBody').innerHTML = content.body;
@@ -524,6 +526,8 @@ function closeInstructions() {
         startMemory1Display(); // Reinicia el conteo de memorización de 10s
     } else if (activeScreen === 'screenPlayMemory2' && document.getElementById('mem2Phase1').style.display !== 'none') {
         startMem2Trial(); // Reinicia el conteo de memorización de 5s si estaba en la Fase 1
+    } else if (activeScreen === 'screenPlayInhibition2') { // <-- AÑADE ESTA CONDICIÓN
+    nextInh2Trial();                                   // <-- PARA REANUDAR TU RETO
     }
 }
     
@@ -991,6 +995,7 @@ function closeInstructions() {
     }
 
     function handleInh2Response(ans) {
+        if (state.inh2.current >= 20) return; // <-- BLOQUEA CLICS EXTRA AL TERMINAR
         clearInterval(state.inh2.timer);
         const rt = Date.now() - state.inh2.itemStartTime;
         const t = state.inh2.trials[state.inh2.current];
@@ -1087,6 +1092,7 @@ function renderFlexTrial() {
 }
 
 function submitFlex(ans) {
+    if (state.flex.current >= 8) return;
     const responseTime = Date.now() - state.flex.itemStartTime;
     let t = state.flex.trials[state.flex.current];
     let correctPar = t.isEven ? 'P' : 'I';
@@ -1160,6 +1166,7 @@ async function finishFlex() {
     state.mem2 = { trials: [], currentTrial: 0, results: [], startTime: 0, interval: null };
     state.att = { targetNum: 0, totalTarget: 10, gridNumbers: [], foundCount: 0, wrongClicks: 0, startTime: 0, elapsed: 0 };
     state.inh = { operations: [], startTime: 0, elapsed: 0 };
+    state.inh2 = { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] };
     state.flex = { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: 0, elapsed: 0 };
 
     // 3. Redirigir a la pantalla de instrucciones del primer reto
