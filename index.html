@@ -282,6 +282,53 @@
 </button>
         </section>
 
+<!-- RETO 5.2: FLEXIBILIDAD - INTERRUPTOR NUMÉRICO -->
+        <section class="screen" id="screenInstrFlex2">
+            <div class="glass-card text-center">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style="background: rgba(59, 130, 246, 0.25);">
+                    <i class="fa-solid fa-toggle-on text-xl" style="color: #3b82f6;"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">Reto 5.2: Interruptor Numérico</h2>
+                <p class="text-sm mb-6" style="color: var(--text-muted);">Flexibilidad Cognitiva</p>
+                <div class="text-left space-y-3 mb-8 text-sm" style="color: var(--text-muted);">
+                    <p>1. Verás un número en pantalla y tienes menos de <strong>2.5 segundos</strong> para responder.</p>
+                    <p>2. <strong style="color: #3b82f6;">🔵 Borde Azul (Paridad):</strong> Clasifica si el número es <strong>PAR</strong> o <strong>IMPAR</strong>.</p>
+                    <p>3. <strong style="color: #f59e0b;">🟡 Borde Amarillo (Magnitud):</strong> Clasifica si el número es <strong>MAYOR QUE 50</strong> o <strong>MENOR QUE 50</strong>.</p>
+                    <p>4. <strong>¡Atención!</strong> La regla cambiará sin previo aviso según el color del borde.</p>
+                </div>
+                <button class="btn-primary" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);" onclick="startFlex2()"><i class="fa-solid fa-play"></i> Comenzar</button>
+            </div>
+        </section>
+
+        <section class="screen" id="screenPlayFlex2">
+            <div class="glass-card text-center" style="max-width: 420px;">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="badge font-mono" id="flex2Progress" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">1 / 16</span>
+                    <span id="flex2RuleBadge" class="badge font-semibold" style="font-size: 0.75rem;">🔵 PAR / IMPAR</span>
+                </div>
+
+                <svg class="countdown-ring mx-auto mb-4" viewBox="0 0 100 100" style="width: 70px; height: 70px;">
+                    <circle class="countdown-bg" cx="50" cy="50" r="42"/>
+                    <circle class="countdown-progress" id="countdownProgressFlex2" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="0" transform="rotate(-90 50 50)" style="stroke: #3b82f6; transition: stroke-dashoffset 0.05s linear;"/>
+                </svg>
+
+                <!-- Tarjeta central con borde dinámico -->
+                <div id="flex2CardDisplay" class="py-8 px-4 rounded-2xl mb-8 transition-all duration-300" style="background: var(--bg-card-alt); border: 4px solid #3b82f6;">
+                    <div class="text-6xl font-bold font-mono" id="flex2NumDisplay" style="color: var(--text);">38</div>
+                </div>
+
+                <!-- Botones de respuesta dinámica -->
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="btn-primary py-4 text-base font-bold" id="flex2BtnLeft" onclick="handleFlex2Response('LEFT')">PAR</button>
+                    <button class="btn-primary py-4 text-base font-bold" id="flex2BtnRight" onclick="handleFlex2Response('RIGHT')">IMPAR</button>
+                </div>
+
+                <button onclick="showCurrentInstructions()" class="btn-ghost !py-2 !px-4 mt-6 text-xs mx-auto flex">
+                    <i class="fa-solid fa-circle-info"></i> Ver instrucciones
+                </button>
+            </div>
+        </section>
+        
         <!-- PANTALLA FINAL -->
         <section class="screen" id="screenFinal"><div class="glass-card text-center"><div class="text-6xl mb-6">🎉</div><h2 class="text-2xl font-bold mb-2" style="color: var(--success);">GRACIAS POR PARTICIPAR EN ESTOS RETOS MATEMÁTICOS</h2><button class="btn-primary w-full mt-4" onclick="restartAllChallenges()">
     <i class="fa-solid fa-rotate-right"></i> Repetir todos los retos
@@ -348,15 +395,16 @@
     const db = firebase.firestore();
     const ADMIN_PASSWORD = 'admin2024'; const CIRC = 2 * Math.PI * 42;
 
-   let state = {
+  let state = {
         user: { nombre: '', edad: '', curso: '' },
         is12: { trials: [], current: 0, timer: null, itemStartTime: 0, userResponded: false, responses: [] },
         mem1: { numbers: [], correctOrder: [], userOrder: [], startTime: 0, elapsed: 0, interval: null, currentTrial: 0, totalTrials: 5, results: [] },
         mem2: { trials: [], currentTrial: 0, results: [], startTime: 0, interval: null },
         att: { targetNum: 0, totalTarget: 10, gridNumbers: [], foundCount: 0, wrongClicks: 0, startTime: 0, elapsed: 0 },
         inh: { operations: [], startTime: 0, elapsed: 0 },
-        inh2: { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] }, // <-- NUEVO ESTADO AÑADIDO
-        flex: { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: 0, elapsed: 0 }
+        inh2: { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] },
+        flex: { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: 0, elapsed: 0 },
+        flex2: { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] } // <-- AÑADIDO
     };
     let allAdminData = []; let profileChartInstance = null;
 
@@ -373,11 +421,11 @@
             att: state.att,
             inh: state.inh,
             inh2: state.inh2,
-            flex: state.flex
+            flex: state.flex,
+            flex2: state.flex2 // <-- AÑADIDO
         };
         localStorage.setItem('retos_matematicos_progress', JSON.stringify(sessionData));
     }
-
     function clearProgress() {
         localStorage.removeItem('retos_matematicos_progress');
     }
@@ -406,6 +454,7 @@
                     else if (screenToRestore.includes('Attention')) screenToRestore = 'screenInstrAttention';
                     else if (screenToRestore.includes('Inhibition2')) screenToRestore = 'screenInstrInhibition2';
                     else if (screenToRestore.includes('Inhibition')) screenToRestore = 'screenInstrInhibition';
+                    else if (screenToRestore.includes('Flex2')) screenToRestore = 'screenInstrFlex2';    
                     else if (screenToRestore.includes('Flex')) screenToRestore = 'screenInstrFlex';
                 }
 
@@ -458,6 +507,7 @@ function checkSavedProgress() {
             inh: { operations: [], startTime: 0, elapsed: 0 },
             inh2: { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] },
             flex: { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: 0, elapsed: 0 }
+            flex2: { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] }
         };
         document.getElementById('registerForm').reset();
         showScreen('screenRegister');
@@ -548,6 +598,12 @@ const instructionsContent = {
         title: 'Reto 5: Cambio de Regla', 
         body: '<p><strong>Ronda 1:</strong> Selecciona <strong style="color: var(--pink);">P</strong> si el resultado es Par, o <strong style="color: var(--primary);">I</strong> si es Impar.</p><p><strong>Ronda 2:</strong> ¡La regla se invierte! Selecciona <strong style="color: var(--primary);">I</strong> si el resultado es Par, o <strong style="color: var(--pink);">P</strong> si es Impar.</p>' 
     }
+
+'screenPlayFlex2': {
+        title: 'Reto 5.2: Interruptor Numérico',
+        body: '<p>1. <strong style="color: #3b82f6;">🔵 Borde Azul:</strong> Responde PAR o IMPAR.</p><p>2. <strong style="color: #f59e0b;">🟡 Borde Amarillo:</strong> Responde MAYOR A 50 o MENOR A 50.</p><p>3. Responde antes de que finalice el tiempo (2.5s).</p>'
+    },
+    
 };
 
 function showCurrentInstructions() {
@@ -580,6 +636,8 @@ function closeInstructions() {
         startMem2Trial(); // Reinicia el conteo de memorización de 5s si estaba en la Fase 1
     } else if (activeScreen === 'screenPlayInhibition2') { // <-- AÑADE ESTA CONDICIÓN
     nextInh2Trial();                                   // <-- PARA REANUDAR TU RETO
+    } else if (activeScreen === 'screenPlayFlex2') { 
+        nextFlex2Trial(); 
     }
 }
     
@@ -1174,6 +1232,180 @@ function submitFlex(ans) {
     }
 }
 
+// RETO 5.2: FLEXIBILIDAD - INTERRUPTOR NUMÉRICO
+    function generateFlex2Trials() {
+        // Bloques de 3, 2, 3, 3, 2, 3 = 16 estímulos
+        const blockPattern = [3, 2, 3, 3, 2, 3];
+        const trials = [];
+        let currentRule = 'PARITY'; // 'PARITY' (Borde Azul) o 'MAGNITUDE' (Borde Amarillo)
+
+        blockPattern.forEach(blockSize => {
+            for (let i = 0; i < blockSize; i++) {
+                let num;
+                do {
+                    num = Math.floor(Math.random() * 90) + 10; // Números entre 10 y 99
+                } while (num === 50); // Excluimos el 50 exacto
+
+                let correctVal;
+                if (currentRule === 'PARITY') {
+                    correctVal = (num % 2 === 0) ? 'PAR' : 'IMPAR';
+                } else {
+                    correctVal = (num > 50) ? 'MAYOR' : 'MENOR';
+                }
+
+                trials.push({
+                    number: num,
+                    rule: currentRule,
+                    isSwitch: i === 0, // Registra si este ensayo requirió cambio mental
+                    correctVal: correctVal
+                });
+            }
+            currentRule = currentRule === 'PARITY' ? 'MAGNITUDE' : 'PARITY';
+        });
+
+        return trials;
+    }
+
+    function startFlex2() {
+        state.flex2.trials = generateFlex2Trials();
+        state.flex2.responses = [];
+        state.flex2.current = 0;
+        showScreen('screenPlayFlex2');
+        nextFlex2Trial();
+    }
+
+    function nextFlex2Trial() {
+        clearInterval(state.flex2.timer);
+        if (state.flex2.current >= 16) {
+            finishFlex2();
+            return;
+        }
+
+        const t = state.flex2.trials[state.flex2.current];
+        document.getElementById('flex2Progress').innerText = `${state.flex2.current + 1} / 16`;
+        document.getElementById('flex2NumDisplay').innerText = t.number;
+
+        const card = document.getElementById('flex2CardDisplay');
+        const badge = document.getElementById('flex2RuleBadge');
+        const btnLeft = document.getElementById('flex2BtnLeft');
+        const btnRight = document.getElementById('flex2BtnRight');
+
+        if (t.rule === 'PARITY') {
+            card.style.borderColor = '#3b82f6';
+            card.style.boxShadow = '0 0 25px rgba(59, 130, 246, 0.3)';
+            badge.innerText = '🔵 PAR / IMPAR';
+            badge.style.background = 'rgba(59, 130, 246, 0.2)';
+            badge.style.color = '#60a5fa';
+
+            btnLeft.innerText = 'PAR';
+            btnLeft.style.background = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+            btnRight.innerText = 'IMPAR';
+            btnRight.style.background = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+        } else {
+            card.style.borderColor = '#f59e0b';
+            card.style.boxShadow = '0 0 25px rgba(245, 158, 11, 0.3)';
+            badge.innerText = '🟡 MAGNITUD (50)';
+            badge.style.background = 'rgba(245, 158, 11, 0.2)';
+            badge.style.color = '#fbbf24';
+
+            btnLeft.innerText = 'MAYOR A 50';
+            btnLeft.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+            btnRight.innerText = 'MENOR A 50';
+            btnRight.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+        }
+
+        // Animación de cambio si aplica
+        if (t.isSwitch) {
+            card.classList.add('rule-shift');
+            setTimeout(() => card.classList.remove('rule-shift'), 400);
+        }
+
+        const p = document.getElementById('countdownProgressFlex2');
+        p.style.stroke = t.rule === 'PARITY' ? '#3b82f6' : '#f59e0b';
+        p.style.strokeDashoffset = '0';
+
+        state.flex2.itemStartTime = Date.now();
+        const duration = 2500; // 2.5 segundos por estímulo
+
+        state.flex2.timer = setInterval(() => {
+            const elapsed = Date.now() - state.flex2.itemStartTime;
+            const remaining = Math.max(0, duration - elapsed);
+            p.style.strokeDashoffset = CIRC * (1 - remaining / duration);
+
+            if (remaining <= 0) {
+                clearInterval(state.flex2.timer);
+                // Registrar Omisión
+                state.flex2.responses.push({ trial: t, ans: null, isCorrect: false, rt: null });
+                state.flex2.current++;
+                nextFlex2Trial();
+            }
+        }, 30);
+    }
+
+    function handleFlex2Response(btnPosition) {
+        if (state.flex2.current >= 16) return;
+        clearInterval(state.flex2.timer);
+
+        const rt = Date.now() - state.flex2.itemStartTime;
+        const t = state.flex2.trials[state.flex2.current];
+
+        let chosenVal;
+        if (t.rule === 'PARITY') {
+            chosenVal = btnPosition === 'LEFT' ? 'PAR' : 'IMPAR';
+        } else {
+            chosenVal = btnPosition === 'LEFT' ? 'MAYOR' : 'MENOR';
+        }
+
+        const isCorrect = chosenVal === t.correctVal;
+        state.flex2.responses.push({ trial: t, ans: chosenVal, isCorrect: isCorrect, rt: rt });
+
+        state.flex2.current++;
+        nextFlex2Trial();
+    }
+
+    async function finishFlex2() {
+        const correctas = state.flex2.responses.filter(r => r.isCorrect).length;
+        const omisiones = state.flex2.responses.filter(r => r.ans === null).length;
+        const errores = state.flex2.responses.filter(r => r.ans !== null && !r.isCorrect).length;
+
+        const correctRTs = state.flex2.responses.filter(r => r.isCorrect).map(r => r.rt);
+        const meanRT = correctRTs.length ? Math.round(correctRTs.reduce((a, b) => a + b, 0) / correctRTs.length) : 0;
+
+        // Métricas de conmutación (Switch Costs)
+        const switchTrials = state.flex2.responses.filter(r => r.trial.isSwitch);
+        const repeatTrials = state.flex2.responses.filter(r => !r.trial.isSwitch);
+
+        const aciertosSwitch = switchTrials.filter(r => r.isCorrect).length;
+        const aciertosRepeat = repeatTrials.filter(r => r.isCorrect).length;
+
+        const res = {
+            categoria: "Funciones Ejecutivas",
+            subcategoria: "Flexibilidad Cognitiva - Interruptor Numérico",
+            nombre: state.user.nombre,
+            edad: state.user.edad,
+            curso: state.user.curso,
+            metricas: {
+                aciertos: correctas,
+                omisiones: omisiones,
+                errores: errores,
+                aciertosCambio: aciertosSwitch,
+                totalCambio: switchTrials.length,
+                aciertosRepeticion: aciertosRepeat,
+                totalRepeticion: repeatTrials.length,
+                tiempoMedioRT: meanRT
+            },
+            fecha: new Date().toISOString()
+        };
+
+        try {
+            await db.collection("resultados").add(res);
+            clearProgress();
+            showScreen('screenFinal');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    
 async function finishFlex() {
     state.flex.elapsed = Date.now() - state.flex.startTime;
     
@@ -1203,7 +1435,7 @@ async function finishFlex() {
         // BORRAR DATOS LOCALES AL COMPLETAR TODAS LAS PRUEBAS
         clearProgress(); 
         
-        showScreen('screenFinal'); 
+        showScreen('screenInstrFlex2'); 
     } catch (e) { 
         console.error(e); 
     }
@@ -1220,6 +1452,7 @@ async function finishFlex() {
     state.inh = { operations: [], startTime: 0, elapsed: 0 };
     state.inh2 = { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] };
     state.flex = { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: 0, elapsed: 0 };
+    state.flex2 = { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] };
 
     // 3. Redirigir a la pantalla de instrucciones del primer reto
     showScreen('screenInstrIs12');
