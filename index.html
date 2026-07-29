@@ -119,8 +119,27 @@
     <div class="bg-blobs" aria-hidden="true"><div class="blob blob-1"></div><div class="blob blob-2"></div><div class="blob blob-3"></div></div>
 
     <div id="userApp">
+        <!-- PANTALLA DE RECUPERACIÓN DE PROGRESO -->
+        <section class="screen" id="screenResume">
+            <div class="glass-card text-center">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style="background: rgba(20, 184, 166, 0.25);">
+                    <i class="fa-solid fa-floppy-disk text-xl" style="color: var(--primary);"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">¡Bienvenido de nuevo!</h2>
+                <p style="color: var(--text-muted);" class="mb-8">Hemos detectado que tienes un progreso guardado de una sesión anterior.</p>
+                <div class="flex flex-col gap-4">
+                    <button class="btn-primary w-full" onclick="resumeSavedProgress()">
+                        <i class="fa-solid fa-play"></i> Continuar donde estaba
+                    </button>
+                    <button class="btn-ghost w-full" onclick="startAsNewUser()">
+                        <i class="fa-solid fa-user-plus"></i> Ingresar como nuevo usuario
+                    </button>
+                </div>
+            </div>
+        </section>
+        
         <!-- REGISTRO -->
-        <section class="screen active" id="screenRegister">
+        <section class="screen" id="screenRegister">
             <div class="glass-card text-center">
                 <img src="https://z-cdn-media.chatglm.cn/files/0e49b2cf-e9f7-4ae3-b5a3-ce0a58d210a8.png?auth_key=1884216701-010d0348ba124471a9dadfeb31a14e13-0-6bae9c75ccb193834bc041cf203cfc55" alt="Logo Junior Fernández" style="width: 140px; margin: 0 auto 1.5rem;">
                 <h1 class="text-3xl font-bold mb-2">Retos Matematicos</h1>
@@ -410,6 +429,39 @@
             e.returnValue = '';
         }
     });
+
+function checkSavedProgress() {
+        const saved = localStorage.getItem('retos_matematicos_progress');
+        if (saved) {
+            showScreen('screenResume');
+        } else {
+            showScreen('screenRegister');
+        }
+    }
+
+    function resumeSavedProgress() {
+        const restored = restoreProgress();
+        if (!restored) {
+            showScreen('screenRegister'); // Por si hay algún error al restaurar
+        }
+    }
+
+    function startAsNewUser() {
+        clearProgress();
+        // Reiniciamos el estado por completo
+        state = {
+            user: { nombre: '', edad: '', curso: '' },
+            is12: { trials: [], current: 0, timer: null, itemStartTime: 0, userResponded: false, responses: [] },
+            mem1: { numbers: [], correctOrder: [], userOrder: [], startTime: 0, elapsed: 0, interval: null, currentTrial: 0, totalTrials: 5, results: [] },
+            mem2: { trials: [], currentTrial: 0, results: [], startTime: 0, interval: null },
+            att: { targetNum: 0, totalTarget: 10, gridNumbers: [], foundCount: 0, wrongClicks: 0, startTime: 0, elapsed: 0 },
+            inh: { operations: [], startTime: 0, elapsed: 0 },
+            inh2: { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] },
+            flex: { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: 0, elapsed: 0 }
+        };
+        document.getElementById('registerForm').reset();
+        showScreen('screenRegister');
+    }
     
     function initRouter() { 
         const urlParams = new URLSearchParams(window.location.search); 
@@ -420,8 +472,8 @@
             document.getElementById('userApp').style.display = 'block'; 
             document.getElementById('adminApp').style.display = 'none'; 
             
-            // INTENTAR RESTAURAR SESIÓN AL CARGAR
-            restoreProgress(); 
+            // COMPROBAR SI HAY PROGRESO GUARDADO PARA PREGUNTAR
+            checkSavedProgress();
         } 
     }
     initRouter();
