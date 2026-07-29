@@ -1621,13 +1621,37 @@ async function finishFlex() {
         }
 
         const flex = userData.find(r => r.subcategoria === "Flexibilidad Cognitiva");
-        if (flex) { flexScore = (flex.metricas.totalAciertos / 8) * 100; }
+const flex2 = userData.find(r => r.subcategoria === "Flexibilidad Cognitiva - Interruptor");
+
+let flex1Score = null;
+let flex2Score = null;
+
+if (flex) {
+    flex1Score = (flex.metricas.totalAciertos / 8) * 100;
+}
+
+if (flex2) {
+    flex2Score = (flex2.metricas.aciertos / 16) * 100;
+}
+
+if (flex1Score !== null && flex2Score !== null) {
+    flexScore = (flex1Score + flex2Score) / 2;
+} else if (flex1Score !== null) {
+    flexScore = flex1Score;
+} else if (flex2Score !== null) {
+    flexScore = flex2Score;
+}
 
         const data = {
             labels: ['Memoria de Trabajo', 'Atención Sostenida', 'Control Inhibitorio', 'Flexibilidad Cognitiva'],
             datasets: [{
                 label: 'Nivel (%)',
-                data: [memScore.toFixed(1), attScore.toFixed(1), inhScore.toFixed(1), flexScore.toFixed(1)],
+                data: [
+    Number.isFinite(memScore) ? +memScore.toFixed(1) : 0,
+    Number.isFinite(attScore) ? +attScore.toFixed(1) : 0,
+    Number.isFinite(inhScore) ? +inhScore.toFixed(1) : 0,
+    Number.isFinite(flexScore) ? +flexScore.toFixed(1) : 0
+],
                 fill: true,
                 backgroundColor: 'rgba(20, 184, 166, 0.2)',
                 borderColor: 'rgb(20, 184, 166)',
@@ -1680,6 +1704,9 @@ async function finishFlex() {
                 }
         };
 
+const canvas = document.getElementById('profileChart');
+if (!canvas) return;
+        
         if (profileChartInstance) profileChartInstance.destroy();
         const ctx = document.getElementById('profileChart').getContext('2d');
         profileChartInstance = new Chart(ctx, config);
