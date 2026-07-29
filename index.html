@@ -492,7 +492,7 @@
                 state.restInfo = sessionData.restInfo || null;
 
                 let screenToRestore = sessionData.currentScreen;
-                if (screenToRestore.includes('Play') || screenToRestore.includes('Sorting') || screenToRestore.includes('Display')) {
+                if (screenToRestore.includes('Play') || screenToRestore.includes('Sorting') || screenToRestore.includes('Display') || screenToRestore.includes('Operations')) {
                     if (screenToRestore.includes('Is12')) screenToRestore = 'screenInstrIs12';
                     else if (screenToRestore.includes('Memory1')) screenToRestore = 'screenInstrMemory1';
                     else if (screenToRestore.includes('Memory2')) screenToRestore = 'screenInstrMemory2';
@@ -505,6 +505,8 @@
 
                 if (screenToRestore === 'screenRest' && state.restInfo && state.restInfo.nextScreenId) {
                     startRestScreen(state.restInfo.nextScreenId, state.restInfo.step);
+                } else if (screenToRestore === 'screenUserChart') {
+                    loadAndRenderUserChart();
                 } else {
                     showScreen(screenToRestore);
                 }
