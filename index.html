@@ -196,6 +196,52 @@
     <i class="fa-solid fa-circle-info"></i> Ver instrucciones
 </button></section>
 
+<!-- RETO 4.2: INHIBICIÓN - CONTEO -->
+        <section class="screen" id="screenInstrInhibition2">
+            <div class="glass-card text-center">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style="background: var(--accent-glow);">
+                    <i class="fa-solid fa-list-ol text-xl" style="color: var(--accent);"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">Reto 4.2: Cuenta los Números</h2>
+                <p class="text-sm mb-6" style="color: var(--text-muted);">Control inhibitorio</p>
+                <div class="text-left space-y-3 mb-8" style="color: var(--text-muted);">
+                    <p>1. Verás un número repetido varias veces en pantalla.</p>
+                    <p>2. Selecciona la <strong style="color: var(--accent);">CANTIDAD de veces</strong> que aparece, ignorando qué número es.</p>
+                    <p>3. Tienes solo <strong style="color: var(--text);">2 segundos</strong> por cada estímulo.</p>
+                </div>
+                <button class="btn-accent" onclick="startInhibition2()"><i class="fa-solid fa-play"></i> Comenzar</button>
+            </div>
+        </section>
+
+        <section class="screen" id="screenPlayInhibition2">
+            <div class="glass-card text-center" style="max-width: 450px;">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="badge badge-warning font-mono" id="inh2Progress">1 / 20</span>
+                </div>
+                
+                <svg class="countdown-ring mx-auto mb-6" viewBox="0 0 100 100">
+                    <circle class="countdown-bg" cx="50" cy="50" r="42"/>
+                    <circle class="countdown-progress" id="countdownProgressInh2" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="0" transform="rotate(-90 50 50)" style="stroke: var(--accent); transition: stroke-dashoffset 0.05s linear;"/>
+                </svg>
+
+                <div class="text-5xl font-bold font-mono my-8 py-6 rounded-2xl tracking-widest" style="background: var(--bg-card-alt); border: 1px solid var(--border); color: var(--text);" id="inh2OpDisplay">
+                    3 3 3
+                </div>
+
+                <div class="grid grid-cols-5 gap-2 mt-6">
+                    <button class="pi-btn pi-btn-i !p-2 !text-xl !border-[1px]" onclick="handleInh2Response(2)">2</button>
+                    <button class="pi-btn pi-btn-i !p-2 !text-xl !border-[1px]" onclick="handleInh2Response(3)">3</button>
+                    <button class="pi-btn pi-btn-i !p-2 !text-xl !border-[1px]" onclick="handleInh2Response(4)">4</button>
+                    <button class="pi-btn pi-btn-i !p-2 !text-xl !border-[1px]" onclick="handleInh2Response(5)">5</button>
+                    <button class="pi-btn pi-btn-i !p-2 !text-xl !border-[1px]" onclick="handleInh2Response(6)">6</button>
+                </div>
+
+                <button onclick="showCurrentInstructions()" class="btn-ghost !py-2 !px-4 mt-6 text-xs mx-auto flex">
+                    <i class="fa-solid fa-circle-info"></i> Ver instrucciones
+                </button>
+            </div>
+        </section>
+        
         <!-- RETO 5: FLEXIBILIDAD -->
         <section class="screen" id="screenInstrFlex"><div class="glass-card text-center"><div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style="background: var(--pink-glow);"><i class="fa-solid fa-shuffle text-xl" style="color: var(--pink);"></i></div><h2 class="text-2xl font-bold mb-2">Reto 5: Cambio de Regla</h2><p class="text-sm mb-6" style="color: var(--text-muted);">Flexibilidad cognitiva</p><div class="text-left space-y-3 mb-8" style="color: var(--text-muted);"><p>1. Verás operaciones <strong style="color: var(--text);">sin resultado</strong>.</p><p>2. Ronda 1: Selecciona <strong style="color: var(--pink);">P</strong> si es Par, <strong style="color: var(--primary);">I</strong> si es Impar.</p><p>3. Ronda 2: <strong style="color: var(--error);">¡La regla cambia!</strong> Selecciona <strong style="color: var(--primary);">I</strong> si es Par, <strong style="color: var(--pink);">P</strong> si es Impar.</p></div><button class="btn-primary" style="background: linear-gradient(135deg, var(--pink), #be185d); box-shadow: 0 4px 15px var(--pink-glow);" onclick="startFlexibility()"><i class="fa-solid fa-play"></i> Comenzar</button></div></section>
         
@@ -285,11 +331,12 @@
 
    let state = {
         user: { nombre: '', edad: '', curso: '' },
-        is12: { trials: [], current: 0, timer: null, itemStartTime: 0, userResponded: false, responses: [] }, // <-- AGREGADO
+        is12: { trials: [], current: 0, timer: null, itemStartTime: 0, userResponded: false, responses: [] },
         mem1: { numbers: [], correctOrder: [], userOrder: [], startTime: 0, elapsed: 0, interval: null, currentTrial: 0, totalTrials: 5, results: [] },
         mem2: { trials: [], currentTrial: 0, results: [], startTime: 0, interval: null },
         att: { targetNum: 0, totalTarget: 10, gridNumbers: [], foundCount: 0, wrongClicks: 0, startTime: 0, elapsed: 0 },
         inh: { operations: [], startTime: 0, elapsed: 0 },
+        inh2: { trials: [], current: 0, timer: null, itemStartTime: 0, responses: [] }, // <-- NUEVO ESTADO AÑADIDO
         flex: { trials: [], current: 0, scoreR1: 0, scoreR2: 0, startTime: 0, elapsed: 0 }
     };
     let allAdminData = []; let profileChartInstance = null;
@@ -306,6 +353,7 @@
             mem2: state.mem2,
             att: state.att,
             inh: state.inh,
+            inh2: state.inh2,
             flex: state.flex
         };
         localStorage.setItem('retos_matematicos_progress', JSON.stringify(sessionData));
@@ -328,6 +376,7 @@
                 state.mem2 = sessionData.mem2 || state.mem2;
                 state.att = sessionData.att || state.att;
                 state.inh = sessionData.inh || state.inh;
+                state.inh2 = sessionData.inh2 || state.inh2;
                 state.flex = sessionData.flex || state.flex;
 
                 let screenToRestore = sessionData.currentScreen;
@@ -436,6 +485,12 @@ const instructionsContent = {
         title: 'Reto 4: Operaciones Selectivas', 
         body: '<p>Resuelve y escribe el resultado <strong style="color: var(--accent);">SOLO si este es MAYOR a 20</strong>. Si es 20 o menor, deja la casilla vacía.</p>' 
     },
+
+    'screenPlayInhibition2': {
+        title: 'Reto 4.2: Conteo Inhibitorio',
+        body: '<p>1. Verás un número repetido varias veces.</p><p>2. Selecciona la <strong style="color: var(--accent);">CANTIDAD</strong> de veces que aparece.</p><p>3. Ignora qué número es. ¡Tienes solo <strong>2 segundos</strong>!</p>'
+    },
+    
     'screenPlayFlex': { 
         title: 'Reto 5: Cambio de Regla', 
         body: '<p><strong>Ronda 1:</strong> Selecciona <strong style="color: var(--pink);">P</strong> si el resultado es Par, o <strong style="color: var(--primary);">I</strong> si es Impar.</p><p><strong>Ronda 2:</strong> ¡La regla se invierte! Selecciona <strong style="color: var(--primary);">I</strong> si el resultado es Par, o <strong style="color: var(--pink);">P</strong> si es Impar.</p>' 
@@ -878,8 +933,105 @@ function closeInstructions() {
     
     state.inh.startTime = Date.now(); 
 }
-    async function verifyInhibition() { state.inh.elapsed = Date.now() - state.inh.startTime; let a = 0, o = 0, f = 0, rC = 0; state.inh.operations.forEach((op, i) => { const inp = document.getElementById(`op-input-${i}`); const v = inp.value.trim() !== '' ? parseInt(inp.value.trim()) : null; if (op.esMayor20) { if (v === op.result) { a++; } else { o++; } } else { if (v === null) { rC++; } else { f++; } } }); const res = { categoria: "Funciones Ejecutivas", subcategoria: "Control Inhibitorio", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { aciertos: a, omisiones: o, falsasAlarmas: f, rechazosCorrectos: rC }, tiempoMs: state.inh.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrFlex'); } catch (e) { console.error(e); } }
+    async function verifyInhibition() { state.inh.elapsed = Date.now() - state.inh.startTime; let a = 0, o = 0, f = 0, rC = 0; state.inh.operations.forEach((op, i) => { const inp = document.getElementById(`op-input-${i}`); const v = inp.value.trim() !== '' ? parseInt(inp.value.trim()) : null; if (op.esMayor20) { if (v === op.result) { a++; } else { o++; } } else { if (v === null) { rC++; } else { f++; } } }); const res = { categoria: "Funciones Ejecutivas", subcategoria: "Control Inhibitorio", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { aciertos: a, omisiones: o, falsasAlarmas: f, rechazosCorrectos: rC }, tiempoMs: state.inh.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrInhibition2'); } catch (e) { console.error(e); } }
 
+    // RETO 4.2: INHIBICIÓN - CONTEO
+    function startInhibition2() {
+        state.inh2.trials = [];
+        state.inh2.responses = [];
+        state.inh2.current = 0;
+
+        for (let i = 0; i < 20; i++) {
+            let val = Math.floor(Math.random() * 5) + 2; // Valor entre 2 y 6
+            let count = Math.floor(Math.random() * 5) + 2; // Cantidad entre 2 y 6
+            // Reducimos la probabilidad de que el valor y la cantidad coincidan (para que sea un verdadero reto de inhibición)
+            if (val === count && Math.random() > 0.3) {
+                count = count === 6 ? 2 : count + 1;
+            }
+            state.inh2.trials.push({ valor: val, cantidad: count });
+        }
+        
+        showScreen('screenPlayInhibition2');
+        nextInh2Trial();
+    }
+
+    function nextInh2Trial() {
+        clearInterval(state.inh2.timer);
+        if (state.inh2.current >= 20) {
+            finishInhibition2();
+            return;
+        }
+
+        const t = state.inh2.trials[state.inh2.current];
+        document.getElementById('inh2Progress').innerText = `${state.inh2.current + 1} / 20`;
+        
+        // Crear el texto con la separación: Ej. "4 4 4"
+        let displayStr = Array(t.cantidad).fill(t.valor).join(' ');
+        document.getElementById('inh2OpDisplay').innerText = displayStr;
+        
+        // Configurar el temporizador visual
+        const p = document.getElementById('countdownProgressInh2');
+        p.style.strokeDashoffset = '0';
+        state.inh2.itemStartTime = Date.now();
+        const duration = 2000; 
+
+        state.inh2.timer = setInterval(() => {
+            const elapsed = Date.now() - state.inh2.itemStartTime;
+            const remaining = Math.max(0, duration - elapsed);
+            p.style.strokeDashoffset = CIRC * (1 - remaining / duration);
+            
+            if (remaining <= 0) {
+                clearInterval(state.inh2.timer);
+                // Omisión
+                state.inh2.responses.push({ trial: t, ans: null, isCorrect: false, rt: null });
+                state.inh2.current++;
+                nextInh2Trial();
+            }
+        }, 30);
+    }
+
+    function handleInh2Response(ans) {
+        clearInterval(state.inh2.timer);
+        const rt = Date.now() - state.inh2.itemStartTime;
+        const t = state.inh2.trials[state.inh2.current];
+        
+        const isCorrect = ans === t.cantidad;
+        state.inh2.responses.push({ trial: t, ans: ans, isCorrect: isCorrect, rt: rt });
+        
+        state.inh2.current++;
+        nextInh2Trial();
+    }
+
+    async function finishInhibition2() {
+        const correctas = state.inh2.responses.filter(r => r.isCorrect).length;
+        const omisiones = state.inh2.responses.filter(r => r.ans === null).length;
+        const errores = state.inh2.responses.filter(r => r.ans !== null && !r.isCorrect).length;
+        const correctRTs = state.inh2.responses.filter(r => r.isCorrect).map(r => r.rt);
+        const meanRT = correctRTs.length ? Math.round(correctRTs.reduce((a, b) => a + b, 0) / correctRTs.length) : 0;
+
+        const res = { 
+            categoria: "Funciones Ejecutivas", 
+            subcategoria: "Control Inhibitorio - Conteo", 
+            nombre: state.user.nombre, 
+            edad: state.user.edad, 
+            curso: state.user.curso, 
+            metricas: { 
+                aciertos: correctas, 
+                omisiones: omisiones, 
+                errores: errores, 
+                tiempoMedioRT: meanRT 
+            }, 
+            fecha: new Date().toISOString() 
+        }; 
+
+        try { 
+            await db.collection("resultados").add(res); 
+            // Avanza al siguiente reto original (Flexibilidad)
+            showScreen('screenInstrFlex'); 
+        } catch (e) { 
+            console.error(e); 
+        }
+    }
 function startFlexibility() {
     state.flex = { 
         trials: [], 
@@ -1089,7 +1241,28 @@ async function finishFlex() {
         if (att) { let hitScore = (att.metricas.aciertos / att.metricas.totalObjetivo) * 50; let totalDistractors = 64 - att.metricas.totalObjetivo; let correctIgnores = Math.max(0, totalDistractors - att.metricas.falsasAlarmas); let ignoreScore = totalDistractors > 0 ? (correctIgnores / totalDistractors) * 50 : 50; attScore = hitScore + ignoreScore; }
 
         const inh = userData.find(r => r.subcategoria === "Control Inhibitorio");
-        if (inh) { let totalPos = inh.metricas.aciertos + inh.metricas.omisiones; let totalNeg = inh.metricas.falsasAlarmas + inh.metricas.rechazosCorrectos; let hitScore = totalPos > 0 ? (inh.metricas.aciertos / totalPos) * 50 : 0; let ignoreScore = totalNeg > 0 ? (inh.metricas.rechazosCorrectos / totalNeg) * 50 : 50; inhScore = hitScore + ignoreScore; }
+        const inh2 = userData.find(r => r.subcategoria === "Control Inhibitorio - Conteo");
+       let inh1Score = null;
+        if (inh) { 
+            let totalPos = inh.metricas.aciertos + inh.metricas.omisiones; 
+            let totalNeg = inh.metricas.falsasAlarmas + inh.metricas.rechazosCorrectos; 
+            let hitScore = totalPos > 0 ? (inh.metricas.aciertos / totalPos) * 50 : 0; 
+            let ignoreScore = totalNeg > 0 ? (inh.metricas.rechazosCorrectos / totalNeg) * 50 : 50; 
+            inh1Score = hitScore + ignoreScore; 
+        }
+
+        let inh2ValScore = null;
+        if (inh2) {
+            inh2ValScore = (inh2.metricas.aciertos / 20) * 100;
+        }
+
+        if (inh1Score !== null && inh2ValScore !== null) {
+            inhScore = (inh1Score + inh2ValScore) / 2;
+        } else if (inh1Score !== null) {
+            inhScore = inh1Score;
+        } else if (inh2ValScore !== null) {
+            inhScore = inh2ValScore;
+        }
 
         const flex = userData.find(r => r.subcategoria === "Flexibilidad Cognitiva");
         if (flex) { flexScore = (flex.metricas.totalAciertos / 8) * 100; }
