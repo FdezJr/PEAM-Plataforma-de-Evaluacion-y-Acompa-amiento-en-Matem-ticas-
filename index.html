@@ -1642,9 +1642,42 @@ async function finishFlex() {
             type: 'radar',
             data: data,
             options: {
-                elements: { line: { borderWidth: 2 } },
-                scales: { r: { angleLines: { color: 'rgba(123,139,170,0.2)' }, grid: { color: 'rgba(123,139,170,0.2)' }, pointLabels: { color: '#e8edf5', font: { family: 'Space Grotesk', size: 12 } }, ticks: { backdropColor: 'transparent', color: '#7b8baa', stepSize: 25 }, suggestedMin: 0, suggestedMax: 100 } }
-            }
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: { // <-- En Chart.js moderno, la escala radar es obligatoriamente 'r'
+                            angleLines: { 
+                                color: 'rgba(123, 139, 170, 0.12)' // Tu variable --border
+                            },
+                            grid: { 
+                                color: 'rgba(123, 139, 170, 0.12)' 
+                            },
+                            pointLabels: {
+                                color: '#e8edf5', // Tu variable --text
+                                font: { 
+                                    family: "'Space Grotesk', sans-serif", 
+                                    size: 12, 
+                                    weight: '600' 
+                                }
+                            },
+                            ticks: {
+                                beginAtZero: true,
+                                max: 100, // Ajusta esto si tus datos no llegan a 100
+                                stepSize: 20,
+                                color: '#7b8baa', // Tu variable --text-muted
+                                backdropColor: 'transparent' // ¡ESTO ES CLAVE! Quita el cuadro blanco de los números
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e8edf5',
+                                font: { family: "'Space Grotesk', sans-serif" }
+                            }
+                        }
+                    }
+                }
         };
 
         if (profileChartInstance) profileChartInstance.destroy();
