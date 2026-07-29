@@ -328,6 +328,29 @@
                 </button>
             </div>
         </section>
+
+<!-- PANTALLA DE DESCANSO -->
+        <section class="screen" id="screenRest">
+            <div class="glass-card text-center" style="max-width: 450px;">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style="background: rgba(20, 184, 166, 0.25);">
+                    <i class="fa-solid fa-mug-hot text-xl" style="color: var(--primary);"></i>
+                </div>
+                <h2 class="text-2xl font-bold mb-2">¡Tiempo de Descanso!</h2>
+                <div class="badge font-mono mb-4" id="restProgressBadge" style="background: var(--purple-glow); color: var(--purple);"></div>
+                <p class="text-md mb-8" id="restMessage" style="color: var(--text-muted);"></p>
+                
+                <svg class="countdown-ring mx-auto mb-6" viewBox="0 0 100 100" style="width: 120px; height: 120px;">
+                    <circle class="countdown-bg" cx="50" cy="50" r="42"/>
+                    <circle class="countdown-progress" id="countdownProgressRest" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="0" transform="rotate(-90 50 50)" style="stroke: var(--primary); transition: stroke-dashoffset 0.1s linear;"/>
+                    <text class="countdown-text" id="countdownTextRest" x="50" y="50" text-anchor="middle" dominant-baseline="central" style="fill: var(--text);">30</text>
+                </svg>
+                
+                <!-- Botón por si el usuario está listo antes de los 30 seg -->
+                <button class="btn-ghost w-full mt-4" id="btnSkipRest">
+                    <i class="fa-solid fa-forward-step"></i> Continuar ahora
+                </button>
+            </div>
+        </section>
         
         <!-- PANTALLA FINAL -->
         <section class="screen" id="screenFinal"><div class="glass-card text-center"><div class="text-6xl mb-6">🎉</div><h2 class="text-2xl font-bold mb-2" style="color: var(--success);">GRACIAS POR PARTICIPAR EN ESTOS RETOS MATEMÁTICOS</h2><button class="btn-primary w-full mt-4" onclick="restartAllChallenges()">
@@ -511,6 +534,47 @@ function checkSavedProgress() {
         };
         document.getElementById('registerForm').reset();
         showScreen('screenRegister');
+    }
+
+// --- LÓGICA DE PANTALLAS DE DESCANSO ---
+    let restTimer = null;
+    function startRestScreen(nextScreenId, step) {
+        showScreen('screenRest');
+        
+        const messages = {
+            1: "¡Excelente trabajo con la atención! Tómate un respiro, relaja la vista y prepárate para los retos de memoria.",
+            2: "¡Memoria superada! Vas a la mitad del camino. Respira profundo, lo estás haciendo increíble.",
+            3: "¡Control inhibitorio dominado! Ya solo falta el último esfuerzo. Prepárate para demostrar tu flexibilidad cognitiva."
+        };
+        
+        document.getElementById('restMessage').innerText = messages[step];
+        document.getElementById('restProgressBadge').innerText = `Descanso ${step} de 3`;
+        
+        const p = document.getElementById('countdownProgressRest');
+        const tE = document.getElementById('countdownTextRest');
+        p.style.strokeDashoffset = '0';
+        
+        const duration = 30000; // 30 segundos
+        const startTime = Date.now();
+        
+        clearInterval(restTimer);
+        
+        document.getElementById('btnSkipRest').onclick = () => {
+            clearInterval(restTimer);
+            showScreen(nextScreenId);
+        };
+
+        restTimer = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, duration - elapsed);
+            tE.textContent = Math.ceil(remaining / 1000);
+            p.style.strokeDashoffset = CIRC * (1 - remaining / duration);
+            
+            if (remaining <= 0) {
+                clearInterval(restTimer);
+                showScreen(nextScreenId);
+            }
+        }, 50);
     }
     
     function initRouter() { 
@@ -954,7 +1018,7 @@ function closeInstructions() {
     function showMem2Math() { const t = state.mem2.trials[state.mem2.currentTrial]; document.getElementById('mem2MathDisplay').innerText = t.mathText + " = ?"; document.getElementById('mem2MathInput').value = ''; document.getElementById('mem2Phase1').style.display = 'none'; document.getElementById('mem2Phase2').style.display = 'block'; document.getElementById('mem2Phase3').style.display = 'none'; document.getElementById('mem2MathInput').focus(); }
     function submitMathMem2() { const v = document.getElementById('mem2MathInput').value.trim(); if (v === '') { showToast('Escribe el resultado.'); return; } state.mem2.results.push({ mathCorrect: parseInt(v) === state.mem2.trials[state.mem2.currentTrial].mathResult }); document.getElementById('mem2RecallInput').value = ''; document.getElementById('mem2Phase1').style.display = 'none'; document.getElementById('mem2Phase2').style.display = 'none'; document.getElementById('mem2Phase3').style.display = 'block'; document.getElementById('mem2RecallInput').focus(); }
     function submitRecallMem2() { const v = document.getElementById('mem2RecallInput').value.trim(); if (v === '') { showToast('Escribe el número.'); return; } state.mem2.results[state.mem2.currentTrial].recallCorrect = parseInt(v) === state.mem2.trials[state.mem2.currentTrial].targetNum; state.mem2.currentTrial++; if (state.mem2.currentTrial < 5) { startMem2Trial(); } else { finishMemory2(); } }
-    async function finishMemory2() { const res = { categoria: "Funciones Ejecutivas", subcategoria: "Memoria de Trabajo - Distractor", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { correctRecalls: state.mem2.results.filter(r => r.recallCorrect).length, correctMath: state.mem2.results.filter(r => r.mathCorrect).length, totalTrials: 5 }, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrInhibition'); } catch (e) { console.error(e); showToast("Error al guardar."); } }
+    async function finishMemory2() { const res = { categoria: "Funciones Ejecutivas", subcategoria: "Memoria de Trabajo - Distractor", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { correctRecalls: state.mem2.results.filter(r => r.recallCorrect).length, correctMath: state.mem2.results.filter(r => r.mathCorrect).length, totalTrials: 5 }, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); startRestScreen('screenInstrInhibition', 2); } catch (e) { console.error(e); showToast("Error al guardar."); } }
 
     // RETO 3
     function startAttention() { 
@@ -995,7 +1059,7 @@ function closeInstructions() {
     state.att.startTime = Date.now(); 
 }
     function handleCellClick(cell, num) { if(cell.classList.contains('selected') || cell.classList.contains('wrong')) return; if(num === state.att.targetNum) { cell.classList.add('selected'); state.att.foundCount++; document.getElementById('attFoundCount').innerText = state.att.foundCount; if(state.att.foundCount === state.att.totalTarget) { setTimeout(() => verifyAttention(), 500); } } else { cell.classList.add('wrong'); state.att.wrongClicks++; setTimeout(() => cell.classList.remove('wrong'), 500); } }
-    async function verifyAttention() { state.att.elapsed = Date.now() - state.att.startTime; const om = state.att.totalTarget - state.att.foundCount; const res = { categoria: "Funciones Ejecutivas", subcategoria: "Atención Sostenida", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { aciertos: state.att.foundCount, falsasAlarmas: state.att.wrongClicks, omisiones: om, totalObjetivo: state.att.totalTarget }, tiempoMs: state.att.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); showScreen('screenInstrMemory1'); } catch (e) { console.error(e); } }
+    async function verifyAttention() { state.att.elapsed = Date.now() - state.att.startTime; const om = state.att.totalTarget - state.att.foundCount; const res = { categoria: "Funciones Ejecutivas", subcategoria: "Atención Sostenida", nombre: state.user.nombre, edad: state.user.edad, curso: state.user.curso, metricas: { aciertos: state.att.foundCount, falsasAlarmas: state.att.wrongClicks, omisiones: om, totalObjetivo: state.att.totalTarget }, tiempoMs: state.att.elapsed, fecha: new Date().toISOString() }; try { await db.collection("resultados").add(res); startRestScreen('screenInstrMemory1', 1); } catch (e) { console.error(e); } }
 
     // RETO 4
    function startInhibition() { 
@@ -1142,7 +1206,7 @@ function closeInstructions() {
         try { 
             await db.collection("resultados").add(res); 
             // Avanza al siguiente reto original (Flexibilidad)
-            showScreen('screenInstrFlex'); 
+            startRestScreen('screenInstrFlex', 3);
         } catch (e) { 
             console.error(e); 
         }
