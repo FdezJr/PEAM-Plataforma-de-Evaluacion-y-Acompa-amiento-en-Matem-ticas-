@@ -353,9 +353,27 @@
         </section>
         
         <!-- PANTALLA FINAL -->
-        <section class="screen" id="screenFinal"><div class="glass-card text-center"><div class="text-6xl mb-6">🎉</div><h2 class="text-2xl font-bold mb-2" style="color: var(--success);">GRACIAS POR PARTICIPAR EN ESTOS RETOS MATEMÁTICOS</h2><button class="btn-primary w-full mt-4" onclick="restartAllChallenges()">
+        <section class="screen" id="screenFinal"><div class="glass-card text-center"><div class="text-6xl mb-6">🎉</div><h2 class="text-2xl font-bold mb-2" style="color: var(--success);">GRACIAS POR PARTICIPAR EN ESTOS RETOS MATEMÁTICOS</h2><button class="btn-primary w-full mt-4" onclick="loadAndRenderUserChart()">
+    <i class="fa-solid fa-chart-line"></i> Ver mi gráfica de resultados
+</button><button class="btn-ghost w-full mt-3" onclick="restartAllChallenges()">
     <i class="fa-solid fa-rotate-right"></i> Repetir todos los retos
 </button><p style="color: var(--text-muted);" class="mb-8">Tus respuestas han sido registradas con éxito.</p></div></section>
+
+        <!-- PANTALLA: GRÁFICA PERSONAL DEL USUARIO -->
+        <section class="screen" id="screenUserChart">
+            <div class="glass-card text-center">
+                <h2 class="text-2xl font-bold mb-6">Tu Perfil de Funciones Ejecutivas</h2>
+                <p id="userChartLoading" style="color: var(--text-muted);">Cargando tu gráfica...</p>
+                <p id="userChartEmpty" style="color: var(--text-muted); display: none;">Aún no tenemos resultados guardados para mostrar tu gráfica.</p>
+                <div style="max-width: 480px; margin: 0 auto; position: relative;">
+                    <canvas id="userProfileChart" style="display: none;"></canvas>
+                </div>
+                <button class="btn-ghost w-full mt-8" onclick="showScreen('screenFinal')">
+                    <i class="fa-solid fa-arrow-left"></i> Volver
+                </button>
+            </div>
+        </section>
+
         <!-- Modal genérico para ver instrucciones sin salir -->
 <div id="instructionModal" class="modal-overlay">
     <div class="modal-content text-center">
@@ -1592,17 +1610,14 @@ async function finishFlex() {
     });
 }
 
-    function renderProfileChart() {
-        const userName = document.getElementById('chartUserSelect').value;
-        if (!userName) { if(profileChartInstance) profileChartInstance.destroy(); return; }
-        const userData = allAdminData.filter(r => r.nombre === userName);
+    function buildRadarConfig(userData) {
         const latestByCategory = {};
 
-userData.forEach(item => {
-    if (!latestByCategory[item.subcategoria]) {
-        latestByCategory[item.subcategoria] = item;
-    }
-});
+        userData.forEach(item => {
+            if (!latestByCategory[item.subcategoria]) {
+                latestByCategory[item.subcategoria] = item;
+            }
+        });
         let memScore = 0, attScore = 0, inhScore = 0, flexScore = 0;
 
         const m1 = latestByCategory["Memoria de Trabajo - Ordenar"];
@@ -1680,12 +1695,6 @@ if (flex1Score !== null && flex2Score !== null) {
 } else if (flex2Score !== null) {
     flexScore = flex2Score;
 }
-console.log({
-    memScore,
-    attScore,
-    inhScore,
-    flexScore
-});
 memScore = Number.isFinite(memScore) ? memScore : 0;
 attScore = Number.isFinite(attScore) ? attScore : 0;
 inhScore = Number.isFinite(inhScore) ? inhScore : 0;
@@ -1716,7 +1725,7 @@ flexScore = Math.max(0, Math.min(100, flexScore));
             }]
         };
 
-        const config = {
+        return {
             type: 'radar',
             data: data,
             options: {
@@ -1758,13 +1767,54 @@ flexScore = Math.max(0, Math.min(100, flexScore));
                     }
                 }
         };
+    }
 
-const canvas = document.getElementById('profileChart');
-if (!canvas) return;
-        
+    function renderProfileChart() {
+        const userName = document.getElementById('chartUserSelect').value;
+        if (!userName) { if(profileChartInstance) profileChartInstance.destroy(); return; }
+        const userData = allAdminData.filter(r => r.nombre === userName);
+        const config = buildRadarConfig(userData);
+
+        const canvas = document.getElementById('profileChart');
+        if (!canvas) return;
+
         if (profileChartInstance) profileChartInstance.destroy();
         const ctx = canvas.getContext('2d');
         profileChartInstance = new Chart(ctx, config);
+    }
+
+    // GRÁFICA DEL PROPIO USUARIO (pantalla final)
+    let userProfileChartInstance = null;
+    async function loadAndRenderUserChart() {
+        showScreen('screenUserChart');
+        const canvas = document.getElementById('userProfileChart');
+        const loadingEl = document.getElementById('userChartLoading');
+        const emptyEl = document.getElementById('userChartEmpty');
+        if (loadingEl) loadingEl.style.display = 'block';
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (canvas) canvas.style.display = 'none';
+
+        try {
+            const snapshot = await db.collection("resultados").where("nombre", "==", state.user.nombre).get();
+            const userData = snapshot.docs.map(doc => doc.data());
+
+            if (loadingEl) loadingEl.style.display = 'none';
+
+            if (userData.length === 0) {
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+
+            const config = buildRadarConfig(userData);
+            if (canvas) canvas.style.display = 'block';
+            if (userProfileChartInstance) userProfileChartInstance.destroy();
+            const ctx = canvas.getContext('2d');
+            userProfileChartInstance = new Chart(ctx, config);
+        } catch (e) {
+            console.error(e);
+            if (loadingEl) loadingEl.style.display = 'none';
+            showToast("No se pudo cargar tu gráfica. Intenta de nuevo.");
+        }
     }
 </script>
 </body>
