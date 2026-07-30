@@ -9,7 +9,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-functions-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
         :root {
@@ -113,6 +115,14 @@
 .modal-close:hover { color: var(--error); }
 .modal-body p { margin-bottom: 0.5rem; }
         
+        @media print {
+            .no-print { display: none !important; }
+            .bg-blobs { display: none !important; }
+            body, #userApp { background: #ffffff !important; }
+            .screen.active { min-height: auto !important; padding: 0 !important; }
+            .glass-card { box-shadow: none !important; border: none !important; background: #ffffff !important; max-width: 100% !important; }
+            #reportContent, #reportContent * { color: #111 !important; }
+        }
     </style>
 </head>
 <body>
@@ -368,9 +378,31 @@
                 <div style="max-width: 480px; margin: 0 auto; position: relative;">
                     <canvas id="userProfileChart" style="display: none;"></canvas>
                 </div>
-                <button class="btn-ghost w-full mt-8" onclick="showScreen('screenFinal')">
+                <button class="btn-primary w-full mt-6" onclick="generateAIReport()">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Generar mi informe con IA
+                </button>
+                <button class="btn-ghost w-full mt-3" onclick="showScreen('screenFinal')">
                     <i class="fa-solid fa-arrow-left"></i> Volver
                 </button>
+            </div>
+        </section>
+
+        <!-- PANTALLA: INFORME PERSONALIZADO GENERADO POR IA -->
+        <section class="screen" id="screenReport">
+            <div class="glass-card" style="max-width: 640px;" id="reportCard">
+                <div id="reportLoading" class="text-center py-10">
+                    <p style="color: var(--text-muted);">Generando tu informe personalizado...</p>
+                    <p style="color: var(--text-muted); font-size: 0.8rem;" class="mt-2">Esto puede tardar unos segundos.</p>
+                </div>
+                <div id="reportError" class="text-center py-10" style="display: none;">
+                    <p style="color: var(--error);">No se pudo generar el informe. Intenta de nuevo.</p>
+                    <button class="btn-primary mt-4" onclick="generateAIReport()"><i class="fa-solid fa-rotate-right"></i> Reintentar</button>
+                </div>
+                <div id="reportContent" style="display: none; text-align: left;"></div>
+                <div class="flex gap-3 mt-8 no-print">
+                    <button class="btn-ghost w-full" onclick="showScreen('screenUserChart')"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+                    <button class="btn-primary w-full" id="btnPrintReport" style="display: none;" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir / Guardar como PDF</button>
+                </div>
             </div>
         </section>
 
@@ -1612,7 +1644,7 @@ async function finishFlex() {
     });
 }
 
-    function buildRadarConfig(userData) {
+    function computeExecutiveScores(userData) {
         const latestByCategory = {};
 
         userData.forEach(item => {
@@ -1706,6 +1738,12 @@ memScore = Math.max(0, Math.min(100, memScore));
 attScore = Math.max(0, Math.min(100, attScore));
 inhScore = Math.max(0, Math.min(100, inhScore));
 flexScore = Math.max(0, Math.min(100, flexScore));
+
+        return { memScore, attScore, inhScore, flexScore };
+    }
+
+    function buildRadarConfig(userData) {
+        const { memScore, attScore, inhScore, flexScore } = computeExecutiveScores(userData);
         
         const data = {
             labels: ['Memoria de Trabajo', 'Atención Sostenida', 'Control Inhibitorio', 'Flexibilidad Cognitiva'],
@@ -1817,6 +1855,102 @@ flexScore = Math.max(0, Math.min(100, flexScore));
             if (loadingEl) loadingEl.style.display = 'none';
             showToast("No se pudo cargar tu gráfica. Intenta de nuevo.");
         }
+    }
+
+    // ===================================================================
+    // INFORME PERSONALIZADO CON IA (Gemini vía Cloudflare Worker)
+    // ===================================================================
+    // ⚠️ Reemplaza esta URL por la de tu propio Worker una vez lo despliegues.
+    const REPORT_WORKER_URL = "https://TU-WORKER.tu-usuario.workers.dev";
+
+    async function generateAIReport() {
+        showScreen('screenReport');
+        const loadingEl = document.getElementById('reportLoading');
+        const errorEl = document.getElementById('reportError');
+        const contentEl = document.getElementById('reportContent');
+        const printBtn = document.getElementById('btnPrintReport');
+
+        loadingEl.style.display = 'block';
+        errorEl.style.display = 'none';
+        contentEl.style.display = 'none';
+        printBtn.style.display = 'none';
+
+        try {
+            const snapshot = await db.collection("resultados").where("nombre", "==", state.user.nombre).get();
+            const userData = snapshot.docs.map(doc => doc.data());
+            if (userData.length === 0) throw new Error('Sin datos');
+
+            const { memScore, attScore, inhScore, flexScore } = computeExecutiveScores(userData);
+
+            // Nota de privacidad: NO enviamos nombre ni curso del estudiante a la IA,
+            // solo los puntajes numéricos. El nombre se inserta después, localmente.
+            const puntajes = {
+                memoriaDeTrabajo: Math.round(memScore),
+                atencionSostenida: Math.round(attScore),
+                controlInhibitorio: Math.round(inhScore),
+                flexibilidadCognitiva: Math.round(flexScore)
+            };
+
+            const response = await fetch(REPORT_WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ puntajes })
+            });
+
+            if (!response.ok) throw new Error('Error del servidor: ' + response.status);
+            const report = await response.json();
+
+            renderReport(report, puntajes);
+            loadingEl.style.display = 'none';
+            contentEl.style.display = 'block';
+            printBtn.style.display = 'block';
+        } catch (e) {
+            console.error("Error generando informe:", e);
+            loadingEl.style.display = 'none';
+            errorEl.style.display = 'block';
+        }
+    }
+
+    function renderReport(report, puntajes) {
+        const nombre = state.user.nombre || 'Estudiante';
+        const fecha = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        const niveles = (report.perfilPorFuncion || []).map(f => `
+            <div class="mb-4">
+                <div class="flex justify-between items-center mb-1">
+                    <strong>${f.funcion}</strong>
+                    <span class="badge badge-success">${f.nivel}</span>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">${f.interpretacion}</p>
+            </div>`).join('');
+
+        const listItems = (arr) => (arr || []).map(item => `<li class="mb-1">${item}</li>`).join('');
+
+        document.getElementById('reportContent').innerHTML = `
+            <div class="text-center mb-6">
+                <h2 class="text-xl font-bold mb-1">Informe de Funciones Ejecutivas</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">${nombre} · ${fecha}</p>
+            </div>
+
+            <h3 class="font-bold mb-2" style="color: var(--primary);">Resumen general</h3>
+            <p class="mb-6" style="color: var(--text-muted);">${report.resumenGeneral || ''}</p>
+
+            <h3 class="font-bold mb-3" style="color: var(--primary);">Perfil por función</h3>
+            ${niveles}
+
+            <h3 class="font-bold mb-2 mt-4" style="color: var(--success);">Fortalezas</h3>
+            <ul class="mb-6" style="color: var(--text-muted); padding-left: 1.2rem;">${listItems(report.fortalezas)}</ul>
+
+            <h3 class="font-bold mb-2" style="color: var(--accent);">Áreas de oportunidad</h3>
+            <ul class="mb-6" style="color: var(--text-muted); padding-left: 1.2rem;">${listItems(report.areasDeOportunidad)}</ul>
+
+            <h3 class="font-bold mb-2" style="color: var(--purple);">Recomendaciones</h3>
+            <ul class="mb-6" style="color: var(--text-muted); padding-left: 1.2rem;">${listItems(report.recomendaciones)}</ul>
+
+            <div class="mt-6 p-4 rounded-xl" style="background: var(--primary-glow);">
+                <p style="color: var(--text);">${report.mensajeFinal || ''}</p>
+            </div>
+        `;
     }
 </script>
 </body>
