@@ -1861,7 +1861,7 @@ flexScore = Math.max(0, Math.min(100, flexScore));
     // INFORME PERSONALIZADO CON IA (Gemini vía Cloudflare Worker)
     // ===================================================================
     // ⚠️ Reemplaza esta URL por la de tu propio Worker una vez lo despliegues.
-    const REPORT_WORKER_URL = "https://informe-funciones-ejecutivas.juniorfdez012.workers.dev/";
+    const REPORT_WORKER_URL = "https://TU-WORKER.tu-usuario.workers.dev";
 
     async function generateAIReport() {
         showScreen('screenReport');
@@ -1897,7 +1897,10 @@ flexScore = Math.max(0, Math.min(100, flexScore));
                 body: JSON.stringify({ puntajes })
             });
 
-            if (!response.ok) throw new Error('Error del servidor: ' + response.status);
+            if (!response.ok) {
+                const errBody = await response.json().catch(() => null);
+                throw new Error('Error del servidor: ' + response.status + (errBody?.detail ? ' | Detalle: ' + errBody.detail : (errBody?.error ? ' | ' + errBody.error : '')));
+            }
             const report = await response.json();
 
             renderReport(report, puntajes);
